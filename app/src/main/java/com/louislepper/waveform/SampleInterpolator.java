@@ -28,6 +28,10 @@ public class SampleInterpolator {
             return end;
         }
 
+        public int getLength(){
+            return 1 + end - start;
+        }
+
         public boolean equals(StartAndEnd a) {
             return a.start == this.start && a.end == this.end;
         }

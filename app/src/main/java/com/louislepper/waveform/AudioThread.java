@@ -19,14 +19,17 @@ public class AudioThread extends Thread{
     private int frequency = BASE_FREQUENCY;
     private double examplePh;
     private double exampleStep;
+    final private Object lock = new Object();
 
 
     public double setWaveform(short[] processedImageArray, SampleInterpolator.StartAndEnd startAndEnd) {
         short[] wave = Arrays.copyOfRange(processedImageArray, startAndEnd.getStart(), startAndEnd.getEnd() + 1);
         wave = WaveStretcher.normalize(wave);
-        wrapped = new WaveformWrapper(wave);
-        examplePh = 0.0;
-        exampleStep = wrapped.length * frequency / SAMPLE_RATE;
+        synchronized (lock) {
+            wrapped = new WaveformWrapper(wave);
+            examplePh = 0.0;
+            exampleStep = wrapped.length * frequency / SAMPLE_RATE;
+        }
         return exampleStep;
     }
 
@@ -49,10 +52,6 @@ public class AudioThread extends Thread{
         short buffer[] = new short[bufferSize];
         wrapped = new WaveformWrapper(createSineWaveform(WAVEFORM_SAMPLES));
 
-
-        double ph = 0.0;
-        double currentStep = 1;
-
         examplePh = 0.0;
         exampleStep = wrapped.length * frequency / SAMPLE_RATE;
 
@@ -61,19 +60,19 @@ public class AudioThread extends Thread{
 
 
         while(isRunning) {
-
-            for (int i = 0; i < buffer.length; i++) {
-                //TODO: I want to make sure this doesn't skip any samples. Maybe we could change the sample rate if needed?
-                buffer[i] = wrapped.get(examplePh);
-                ph += currentStep;
-                ph = ph % wrapped.length;
-                examplePh += exampleStep;
-                examplePh = examplePh % wrapped.length;
+            synchronized (lock) {
+                for (int i = 0; i < buffer.length; i++) {
+                    //TODO: I want to make sure this doesn't skip any samples. Maybe we could change the sample rate if needed?
+                    examplePh = examplePh % wrapped.length;
+                    buffer[i] = wrapped.get(examplePh);
+                    examplePh += exampleStep;
+                }
             }
 
             //This is overly conservative, but I want to block for as little time as possible if we've been stopped.
             if(isRunning) {
                 audioTrack.write(buffer, 0, bufferSize);
+                System.gc();
             }
         }
         //Todo: need to find a way to actually release these.

@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 public class SampleCrossfader {
     private SampleCrossfader(){}
-    public static short[] crossfade(short[] shortSoundArray, int start, int length) {
+    public static short[] oldCrossfade(short[] shortSoundArray, int start, int length) {
         if(shortSoundArray.length == 0) return shortSoundArray;
         if(length < 2) return  shortSoundArray;
 
@@ -67,7 +67,62 @@ public class SampleCrossfader {
         return arrayToReturn;
     }
 
+    public static short[] crossfade(short[] shortSoundArray, int start, int length) {
+        if(shortSoundArray.length == 0) return shortSoundArray;
+        if(length < 2) return  shortSoundArray;
+
+        //double[] soundArray = Doubles.toArray(Shorts.asList(Arrays.copyOfRange(shortSoundArray, start, length)));
+        double firstSample = (double) shortSoundArray[start];
+        double lastSample  = (double) shortSoundArray[start + length - 1];
+        if(equals(firstSample, lastSample)) return shortSoundArray;
+
+        double midPoint = halfwayBetween(firstSample, lastSample);
+
+        double bigger = Math.max(firstSample, lastSample);
+        double smaller = Math.min(firstSample, lastSample);
+
+        int index;
+        int direction = 0;
+        if(firstSample == bigger) {
+            index = start;
+            direction = RIGHT;
+        } else {
+            index = start + length - 1;
+            direction = LEFT;
+        }
+
+        shortSoundArray[index] = (short) midPoint;
+        int midPointIndex = index;
+
+        short baseLine = (short) smaller;
+
+        //Want to catch if it goes past too.
+        while(shortSoundArray[moduloLowerAndUpperBound(index + direction, start + length, start)] > baseLine) {
+            index = moduloLowerAndUpperBound(index + direction, start + length, start);
+            //TODO: Should we change the original array? Or make a new one?
+            shortSoundArray[index] = (short) halfwayBetween(baseLine, shortSoundArray[index]);
+        }
+        index = index + direction;
+        Line topLine = new Line(midPointIndex, bigger, index, shortSoundArray[index]);
+
+        direction = direction * -1;
+        index = midPointIndex;
+
+        int topLineIncrementer = direction * -1;
+        int topLineIndex = index;
+        while(shortSoundArray[moduloLowerAndUpperBound((index + direction), start + length, start)] < topLine.getyPoint(topLineIndex + topLineIncrementer)) {
+            shortSoundArray[moduloLowerAndUpperBound((index + direction), start + length, start)] = (short) halfwayBetween(topLine.getyPoint(topLineIndex + topLineIncrementer), shortSoundArray[moduloLowerAndUpperBound((index + direction), start + length, start)]);
+            topLineIndex += topLineIncrementer;
+            index = index + direction;
+        }
+
+        return shortSoundArray;
+    }
+
     private static double halfwayBetween(double a, double b){
+        return (a + b)/2;
+    }
+    private static int halfwayBetween(int a, int b){
         return (a + b)/2;
     }
 
@@ -86,6 +141,34 @@ public class SampleCrossfader {
         }
         return value;
     }
+
+    //Visible for testing
+    public static int moduloLowerAndUpperBound(int value, int upperMod, int lowerMod){
+        upperMod -= lowerMod;
+        value -= lowerMod;
+
+        if (value >= upperMod) {
+            int thing = value/upperMod;
+            return lowerMod + (value - (thing * upperMod));
+        } else if (value < 0) {
+            int thing = Math.abs(value/upperMod);
+            return lowerMod + (value + (thing + 1) * upperMod);
+        }
+        return lowerMod + value;
+    }
+
+
+    //Visible for testing
+//    public static int moduloLowerAndUpperBound(int value, int upperMod, int lowerMod){
+//        if (value >= upperMod) {
+//            int thing = value/upperMod;
+//            return value - (thing * upperMod);
+//        } else if (value < lowerMod) {
+//            int thing = Math.abs(value/upperMod);
+//            return value + (thing + 1) * upperMod;
+//        }
+//        return value;
+//    }
 
     final private static int LEFT = -1;
     final private static int RIGHT = 1;

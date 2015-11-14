@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Waveform</string>
 
-    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_button">Settings View</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="quit_button">Quit</string>
 </resources>

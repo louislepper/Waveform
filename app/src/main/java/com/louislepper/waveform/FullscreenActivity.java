@@ -1,6 +1,7 @@
 package com.louislepper.waveform;
 
 import android.annotation.SuppressLint;
+import android.os.Build;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -286,7 +287,7 @@ public class FullscreenActivity extends AppCompatActivity implements CameraBridg
 
         SampleInterpolator.StartAndEnd startAndEnd = SampleInterpolator.interpolateInvalidSamples(soundData);
 
-        soundData = SampleCrossfader.crossfade(soundData, startAndEnd.getStart(), startAndEnd.getEnd());
+        soundData = SampleCrossfader.crossfade(soundData, startAndEnd.getStart(), startAndEnd.getLength());
 
        // soundArrayToImage(soundData, empty);
 //        int[] shouldBeIdenticalSoundArray = imageArrayToSoundArray(new ArrayMat(empty));
@@ -302,10 +303,6 @@ public class FullscreenActivity extends AppCompatActivity implements CameraBridg
         soundArrayToImage(soundData, currentMat, (int) Math.round(step));
 
         return currentMat;
-    }
-
-    private void stepToImage(double step, Mat currentMat) {
-
     }
 
     private Mat soundArrayToImage(short[] array, Mat image, int intStep) {
@@ -409,6 +406,27 @@ public class FullscreenActivity extends AppCompatActivity implements CameraBridg
             lowerBound--;
         }
         return -1;
+    }
+
+    public void displaySettings(View view) {
+
+    }
+
+    public void quit(View view) {
+        if (mOpenCvCameraView != null)
+            mOpenCvCameraView.disableView();
+        audioThread.stopAudio();
+        try {
+            audioThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d(TAG,"Audio track potentially wasn't freed!");
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            this.finishAffinity();
+        } else {
+            this.finish();
+        }
     }
 
     private class ArrayMat {
