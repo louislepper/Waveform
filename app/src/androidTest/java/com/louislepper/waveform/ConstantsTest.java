@@ -11,7 +11,7 @@ public class ConstantsTest extends TestCase{
         assertTrue("Tones should be equal. Tone A = " + toneA +". Tone B = " + toneB + ". Tone B generated from offset = " + offsetNote, equals(toneB, offsetNote));
     }
 
-    private boolean equals(double a, double b) {
+    static boolean equals(double a, double b) {
         return Math.abs(a - b) < 0.00001;
     }
 }

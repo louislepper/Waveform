@@ -50,6 +50,8 @@ public class FullscreenActivity extends AppCompatActivity implements CameraBridg
     private boolean mVisible;
     private CameraBridgeViewBase mOpenCvCameraView;
 
+    private static AudioThread audioThread;
+
     static{ System.loadLibrary("opencv_java3"); }
 
     @Override
@@ -115,8 +117,16 @@ public class FullscreenActivity extends AppCompatActivity implements CameraBridg
     public void onPause()
     {
         super.onPause();
+        //This must be disabled before stopping audio. Otherwise it'll be started back up again on the next camera frame.
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        audioThread.stopAudio();
+        try {
+            audioThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.d(TAG,"Audio track potentially wasn't freed!");
+        }
     }
 
     @Override
@@ -249,6 +259,9 @@ public class FullscreenActivity extends AppCompatActivity implements CameraBridg
     private final int CANNY_HIGH = 30;
     private final int LIGHT_THRESH = 160;
 
+    //Consider moving the initialisation outside of the loop.
+    short[] soundData;
+
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         Mat currentMat = inputFrame.rgba();
@@ -263,46 +276,85 @@ public class FullscreenActivity extends AppCompatActivity implements CameraBridg
 
         Imgproc.Canny(currentMat, currentMat, CANNY_LOW, CANNY_HIGH);
 
-        int[] soundArray = imageArrayToSoundArray(new ArrayMat(currentMat));
+        if(soundData == null || soundData.length != currentMat.cols()) {
+            soundData = new short[currentMat.cols()];
+        }
 
-     //   Mat empty = new Mat(currentMat.rows(), currentMat.cols(), CvType.CV_16UC4);
+        imageArrayToSoundArray(new ArrayMat(currentMat), soundData);
 
         Imgproc.cvtColor(currentMat, currentMat, Imgproc.COLOR_GRAY2RGBA);
 
-        soundArrayToImage(soundArray, currentMat);
-       // soundArrayToImage(soundArray, empty);
+        SampleInterpolator.StartAndEnd startAndEnd = SampleInterpolator.interpolateInvalidSamples(soundData);
+
+        soundData = SampleCrossfader.crossfade(soundData, startAndEnd.getStart(), startAndEnd.getEnd());
+
+       // soundArrayToImage(soundData, empty);
 //        int[] shouldBeIdenticalSoundArray = imageArrayToSoundArray(new ArrayMat(empty));
 
+        if(audioThread == null || !audioThread.isAlive()) {
+            audioThread = new AudioThread();
+            audioThread.start();
+        }
+
+        //Send array here.
+        final double step = audioThread.setWaveform(soundData, startAndEnd);
+
+        soundArrayToImage(soundData, currentMat, (int) Math.round(step));
 
         return currentMat;
     }
 
-    private Mat soundArrayToImage(int[] array, Mat image) {
+    private void stepToImage(double step, Mat currentMat) {
+
+    }
+
+    private Mat soundArrayToImage(short[] array, Mat image, int intStep) {
+        final double[] red = new double[] {255.0,0.0,0.0,0.0};
+        final double[] green = new double[] {0.0,255.0,0.0,0.0};
         for(int x = 0; x < image.cols(); x++) {
-            double[] doubles = image.get(image.rows() / 2, x);
-            double[] red = new double[] {255.0,0.0,0.0,0.0};
             if(!(array[x] == -1)){
                 image.put(array[x],x,red);
+                if(intStep != 0 && x % intStep == 0) {
+                    image.put(moreThanZero(array[x] - 1), x, green);
+                    image.put(array[x], x, green);
+                    image.put(lessThanValue(array[x] + 1, image.cols()), x, green);
+                }
             }
         }
         return image;
     }
 
-    private int[] imageArrayToSoundArray(ArrayMat mat) {
-        //Consider moving the initialisation outside of the loop.
-        int[] soundData = new int[mat.cols()];
+    private int moreThanZero(int value) {
+        if(value < 0) return 0;
+        return value;
+    }
+    private int lessThanValue(int value, int max) {
+        if(value >= max) return max = 1;
+        return value;
+    }
+
+
+    private void imageArrayToSoundArray(ArrayMat mat, short[] soundData) {
 
         //Find a white pixel in each column of the image.
         //Once a white pixel is found, start searching the next column near to where the previous pixel was found.
         int previousWhitePoint = 0;
         for(int x = 0; x < mat.cols(); x++) {
-            int newPoint = findWhitePointInColumn(mat, x, previousWhitePoint - 60, mat.rows());
-            if(newPoint == -1) {
-                newPoint = findWhitePointInColumn(mat, x, 0, previousWhitePoint - 60);
-            }
+//            short newPoint = findWhitePointInColumn(mat, x, previousWhitePoint - 60, mat.rows());
+//            if(newPoint == -1) {
+//                newPoint = findWhitePointInColumn(mat, x, 0, previousWhitePoint - 60);
+//            }
+
+            short newPoint = smartFindWhitePointInColumn(mat, x, previousWhitePoint);
+//            if(newPoint == -1) {
+//                newPoint = smartFindWhitePointInColumn(mat, x, previousWhitePoint);
+//            }
+
             //TODO: Add a check here to ensure that a int is large enough.
             soundData[x] = newPoint;
-            //previousWhitePoint = newPoint;
+            if(newPoint != -1) {
+                previousWhitePoint = newPoint;
+            }
         }
 
         //This should never happen, but we found that occasionally the image matrix would change dimensions. Perhaps on rotate.
@@ -311,19 +363,50 @@ public class FullscreenActivity extends AppCompatActivity implements CameraBridg
                 soundData[i] = -1;
             }
         }
-
-        return soundData;
     }
 
 
-    private int findWhitePointInColumn(ArrayMat image, int column, int yMin, int yMax) {
+    private short findWhitePointInColumn(ArrayMat image, int column, int yMin, int yMax) {
         yMin = Math.max(yMin, 0);
         yMax = Math.min(image.rows(), yMax);
 
         for(int y = yMin; y < yMax; y++) {
             if(image.get(y, column) < 0){
-                return y;
+                //TODO: Do some tests to make sure this is safe here.
+                return (short) y;
             }
+        }
+        return -1;
+    }
+
+    private short smartFindWhitePointInColumn(ArrayMat image, int column, int startingPoint) {
+
+        int topBound = startingPoint;
+        int lowerBound = startingPoint;
+
+        while(topBound < image.rows && lowerBound >= 0)  {
+            if(image.get(topBound, column) < 0) {
+                return (short) topBound;
+            }
+            topBound++;
+            if(image.get(lowerBound, column) < 0) {
+                return (short) lowerBound;
+            }
+            lowerBound--;
+        }
+
+        while(topBound < image.rows) {
+            if(image.get(topBound, column) < 0) {
+                return (short) topBound;
+            }
+            topBound++;
+        }
+
+        while(lowerBound >= 0)  {
+            if(image.get(lowerBound, column) < 0) {
+                return (short) lowerBound;
+            }
+            lowerBound--;
         }
         return -1;
     }
