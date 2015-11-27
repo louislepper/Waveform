@@ -10,6 +10,8 @@ public class AudioThread extends Thread{
     private static final double AMPLITUDE = Short.MAX_VALUE;
     private static final int SAMPLE_RATE = 44100;
     private static final int BASE_FREQUENCY = 220;
+
+    //We haven't actually resized the wave. This is just an approximate number. This'll be off by a bunch depending on how small the wave is.
     private static final int WAVEFORM_SAMPLES = 2000;
 
     private volatile WaveformWrapper wrapped;
@@ -25,11 +27,8 @@ public class AudioThread extends Thread{
     public double setWaveform(short[] processedImageArray, SampleInterpolator.StartAndEnd startAndEnd) {
         short[] wave = Arrays.copyOfRange(processedImageArray, startAndEnd.getStart(), startAndEnd.getEnd() + 1);
         wave = WaveStretcher.normalize(wave);
-        synchronized (lock) {
-            wrapped = new WaveformWrapper(wave);
-            examplePh = 0.0;
-            exampleStep = wrapped.length * frequency / SAMPLE_RATE;
-        }
+        wrapped = new WaveformWrapper(wave);
+
         return exampleStep;
     }
 
@@ -53,25 +52,23 @@ public class AudioThread extends Thread{
         wrapped = new WaveformWrapper(createSineWaveform(WAVEFORM_SAMPLES));
 
         examplePh = 0.0;
-        exampleStep = wrapped.length * frequency / SAMPLE_RATE;
+        exampleStep = WAVEFORM_SAMPLES * frequency / SAMPLE_RATE;
 
         // start audio
         audioTrack.play();
 
-
         while(isRunning) {
-            synchronized (lock) {
                 for (int i = 0; i < buffer.length; i++) {
-                    //TODO: I want to make sure this doesn't skip any samples. Maybe we could change the sample rate if needed?
-                    examplePh = examplePh % wrapped.length;
+                    //This line is probably unneeded, but I don't want the value overflowing and throwing an exception (does java do that?)
+                    examplePh = examplePh % WAVEFORM_SAMPLES;
                     buffer[i] = wrapped.get(examplePh);
                     examplePh += exampleStep;
                 }
-            }
 
             //This is overly conservative, but I want to block for as little time as possible if we've been stopped.
             if(isRunning) {
                 audioTrack.write(buffer, 0, bufferSize);
+                //TODO: Why is this necessary to avoid freezes?
                 System.gc();
             }
         }
@@ -88,39 +85,5 @@ public class AudioThread extends Thread{
             waveform[i] = (short) (AMPLITUDE * Math.sin(2 * Math.PI * phase));
         }
         return waveform;
-    }
-
-    public static class WaveformWrapper {
-        private final short[] waveform;
-        private int length;
-        private int start;
-
-        public WaveformWrapper(short[] waveform){
-            this.waveform = waveform;
-            this.length = waveform.length;
-            this.start = 0;
-        }
-
-        public WaveformWrapper(short[] waveform, SampleInterpolator.StartAndEnd startAndEnd){
-            this.waveform = waveform;
-            this.length = startAndEnd.getEnd() - startAndEnd.getStart();
-            this.start = startAndEnd.getStart();
-        }
-
-        public short get(double index){
-            if(length == 0) return 0;
-            int lowerIndex = (int) Math.floor(index);
-
-            int upperIndex = ((int) Math.ceil(index)) % waveform.length;
-
-            double indexDifference = index - lowerIndex; //Should always be between 0 and 1
-
-            short lower = waveform[lowerIndex];
-            short upper = waveform[upperIndex];
-
-            double difference = upper - lower;
-            double unroundedResult = ((double) lower) + (difference * indexDifference);
-            return (short) unroundedResult;
-        }
     }
 }

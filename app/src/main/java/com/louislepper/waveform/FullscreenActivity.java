@@ -429,6 +429,9 @@ public class FullscreenActivity extends AppCompatActivity implements CameraBridg
         }
     }
 
+    public void displayKeyboard(View view) {
+    }
+
     private class ArrayMat {
         private final int rows, cols;
         private final byte[] array;

@@ -30,9 +30,14 @@
                 android:layout_weight="1" android:text="@string/quit_button"
                 android:onClick="quit"/>
 
+            <Button android:id="@+id/keyboard_button" style="?metaButtonBarButtonStyle"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="@string/keyboard_button"
+                android:onClick="displayKeyboard"/>
+
             <Button android:id="@+id/dummy_button" style="?metaButtonBarButtonStyle"
                 android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="@string/dummy_button"
+                android:layout_weight="1" android:text="@string/settings_button"
                 android:onClick="displaySettings"/>
 
         </LinearLayout>

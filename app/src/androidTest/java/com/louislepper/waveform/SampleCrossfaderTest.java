@@ -144,33 +144,21 @@ public class SampleCrossfaderTest extends TestCase {
         assertTrue(ConstantsTest.equals(line.getyPoint(0.5), 0.5));
     }
 
-    public void testModuloIncludingZero() throws Exception {
-        assertTrue(SampleCrossfader.moduloIncludingZero(-5, 4) == 3);
-        assertTrue(SampleCrossfader.moduloIncludingZero(-6, 4) == 2);
-        assertTrue(SampleCrossfader.moduloIncludingZero(0, 4) == 0);
-        assertTrue(SampleCrossfader.moduloIncludingZero(2, 4) == 2);
-        assertTrue(SampleCrossfader.moduloIncludingZero(4, 4) == 0);
-        assertTrue(SampleCrossfader.moduloIncludingZero(5, 4) == 1);
-        assertTrue(SampleCrossfader.moduloIncludingZero(40, 4) == 0);
-        assertTrue(SampleCrossfader.moduloIncludingZero(5, 5) == 0);
-    }
-
     public void testUpperLowerModulo() throws Exception {
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(-5, 4, 0) == 3);
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(-6, 4, 0) == 2);
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(0, 4, 0) == 0);
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(2, 4, 0) == 2);
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(4, 4, 0) == 0);
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(5, 4, 0) == 1);
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(40, 4, 0) == 0);
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(5, 5, 0) == 0);
+        assertTrue(Constants.moduloLowerAndUpperBound(-5, 4, 0) == 3);
+        assertTrue(Constants.moduloLowerAndUpperBound(-6, 4, 0) == 2);
+        assertTrue(Constants.moduloLowerAndUpperBound(0, 4, 0) == 0);
+        assertTrue(Constants.moduloLowerAndUpperBound(2, 4, 0) == 2);
+        assertTrue(Constants.moduloLowerAndUpperBound(4, 4, 0) == 0);
+        assertTrue(Constants.moduloLowerAndUpperBound(5, 4, 0) == 1);
+        assertTrue(Constants.moduloLowerAndUpperBound(40, 4, 0) == 0);
+        assertTrue(Constants.moduloLowerAndUpperBound(5, 5, 0) == 0);
 
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(5, 5, 1) == 1);
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(5, 5, 2) == 2);
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(6, 5, 2) == 3);
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(2, 5, 2) == 2);
-        assertTrue(SampleCrossfader.moduloLowerAndUpperBound(1, 5, 2) == 4);
-
+        assertTrue(Constants.moduloLowerAndUpperBound(5, 5, 1) == 1);
+        assertTrue(Constants.moduloLowerAndUpperBound(5, 5, 2) == 2);
+        assertTrue(Constants.moduloLowerAndUpperBound(6, 5, 2) == 3);
+        assertTrue(Constants.moduloLowerAndUpperBound(2, 5, 2) == 2);
+        assertTrue(Constants.moduloLowerAndUpperBound(1, 5, 2) == 4);
     }
 
 

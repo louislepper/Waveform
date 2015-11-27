@@ -18,7 +18,7 @@ public class SampleInterpolatorTest extends TestCase {
     public void testInterpolateInvalidSamples() throws Exception {
         short[] samples = new short[]{-1, -1, -1, 1, 2, -1, -1, -1, -1, -1, 8, 9, 10, -1, -1, -1};
         short[] expectedArray = new short[]{-1, -1, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1, -1, -1};
-        SampleInterpolator.StartAndEnd expectedStartAndEnd = new SampleInterpolator.StartAndEnd(3, 16);
+        SampleInterpolator.StartAndEnd expectedStartAndEnd = new SampleInterpolator.StartAndEnd(3, 12);
         SampleInterpolator.StartAndEnd startAndEnd = SampleInterpolator.interpolateInvalidSamples(samples);
 
         assertTrue(expectedStartAndEnd.equals(startAndEnd));

@@ -4,4 +4,7 @@
     <string name="dummy_button">Settings View</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="quit_button">Quit</string>
+    <string name="keyboard_button">Keyboard</string>
+    <string name="settings_button">Settings View</string>
+    <string name="smooth_edges">Smooth Edges</string>
 </resources>
