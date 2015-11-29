@@ -5,6 +5,10 @@
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="quit_button">Quit</string>
     <string name="keyboard_button">Keyboard</string>
-    <string name="settings_button">Settings View</string>
-    <string name="smooth_edges">Smooth Edges</string>
+    <string name="settings_button">Settings</string>
+    <string name="smooth_edges_on">Smooth Edges</string>
+    <string name="main_view_button">Normal</string>
+    <string name="line_feedback_on">Line feedback</string>
+    <string name="smooth_edges_off">Don\'t smooth edges</string>
+    <string name="line_feedback_off">No line feedback</string>
 </resources>

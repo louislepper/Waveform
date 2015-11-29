@@ -2,7 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     xmlns:opencv="http://schemas.android.com/apk/res-auto"
     android:layout_height="match_parent" android:background="#0099cc"
-    tools:context=".FullscreenActivity">
+    tools:context=".FullscreenActivity"
+    android:id="@+id/fullscreen_content">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
@@ -10,9 +11,44 @@
     <org.opencv.android.JavaCameraView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/fullscreen_content"
+        android:id="@+id/camera_content"
         opencv:show_fps="true"
         opencv:camera_id="any" />
+
+    <com.levien.synthesizer.android.widgets.keyboard.KeyboardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:id="@+id/keyboard_view"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:id="@+id/settings_content">
+        <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textOn="@string/smooth_edges_on"
+            android:textOff="@string/smooth_edges_off"
+            android:id="@+id/toggleSmoothingButton"
+            android:layout_gravity="center"
+            android:checked="true"
+            android:onClick="toggleSmoothing"/>
+        <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textOn="@string/line_feedback_on"
+            android:textOff="@string/line_feedback_off"
+            android:id="@+id/toggleLineButton"
+            android:layout_gravity="center"
+            android:checked="true"
+            android:onClick="toggleLineFeedback" />
+    </LinearLayout>
+
+    <!--<com.levien.synthesizer.android.widgets.keyboard.KeyboardView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent" />-->
 
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
@@ -30,15 +66,20 @@
                 android:layout_weight="1" android:text="@string/quit_button"
                 android:onClick="quit"/>
 
+            <Button android:id="@+id/settings_button" style="?metaButtonBarButtonStyle"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="@string/settings_button"
+                android:onClick="displaySettings"/>
+
             <Button android:id="@+id/keyboard_button" style="?metaButtonBarButtonStyle"
                 android:layout_width="0dp" android:layout_height="wrap_content"
                 android:layout_weight="1" android:text="@string/keyboard_button"
                 android:onClick="displayKeyboard"/>
 
-            <Button android:id="@+id/dummy_button" style="?metaButtonBarButtonStyle"
+            <Button android:id="@+id/main_view_button" style="?metaButtonBarButtonStyle"
                 android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="@string/settings_button"
-                android:onClick="displaySettings"/>
+                android:layout_weight="1" android:text="@string/main_view_button"
+                android:onClick="displayMainView"/>
 
         </LinearLayout>
     </FrameLayout>
