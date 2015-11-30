@@ -145,20 +145,6 @@ public class MainActivity extends CameraActivity{
         }
     }
 
-
-    private short findWhitePointInColumn(ArrayMat image, int column, int yMin, int yMax) {
-        yMin = Math.max(yMin, 0);
-        yMax = Math.min(image.rows(), yMax);
-
-        for(int y = yMin; y < yMax; y++) {
-            if(image.get(y, column) < 0){
-                //TODO: Do some tests to make sure this is safe here.
-                return (short) y;
-            }
-        }
-        return -1;
-    }
-
     private short smartFindWhitePointInColumn(ArrayMat image, int column, int startingPoint) {
 
         int topBound = startingPoint;
