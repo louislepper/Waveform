@@ -1,10 +1,13 @@
 package com.louislepper.waveform;
 
 import android.content.SharedPreferences;
+import android.inputmethodservice.Keyboard;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+
+import com.levien.synthesizer.android.widgets.keyboard.KeyboardView;
 
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Mat;
@@ -19,14 +22,14 @@ public class MainActivity extends CameraActivity{
     private View settingsView;
     private boolean smoothing = true;
     private boolean lineFeedback = true;
-    private View keyboardView;
+    private KeyboardView keyboardView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final SharedPreferences app_preferences = getSharedPreferences("APP_PREFERENCES", MODE_PRIVATE);
         settingsView = findViewById(R.id.settings_content);
-        keyboardView = findViewById(R.id.keyboard_view);
+        keyboardView = (KeyboardView) findViewById(R.id.keyboard_view);
 
 //        final SharedPreferences.Editor editor = app_preferences.edit();
 //        editor.putBoolean("SMOOTH_EDGES", false);
@@ -83,6 +86,7 @@ public class MainActivity extends CameraActivity{
 
         if(audioThread == null || !audioThread.isAlive()) {
             audioThread = new AudioThread();
+            keyboardView.setMidiListener(audioThread);
             audioThread.start();
         }
 
@@ -190,12 +194,14 @@ public class MainActivity extends CameraActivity{
         allViewsOff();
         mOpenCvCameraView.setVisibility(View.VISIBLE);
         keyboardView.setVisibility(View.VISIBLE);
+        audioThread.keyboardOn();
     }
 
     private void allViewsOff(){
         mOpenCvCameraView.setVisibility(View.GONE);
         settingsView.setVisibility(View.GONE);
         keyboardView.setVisibility(View.GONE);
+        audioThread.keyboardOff();
     }
 
     public void quit(View view) {
