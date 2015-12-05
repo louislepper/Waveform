@@ -15,16 +15,20 @@
         opencv:show_fps="true"
         opencv:camera_id="any" />
 
-    <com.levien.synthesizer.android.widgets.keyboard.KeyboardView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:id="@+id/keyboard_view"/>
+    <!--<com.levien.synthesizer.android.widgets.keyboard.KeyboardView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent" />-->
 
-    <LinearLayout
+    <!-- This FrameLayout insets its children based on system windows using
+         android:fitsSystemWindows. -->
+
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical"
         android:visibility="gone"
+
+        android:background="@color/transparent_grey"
         android:id="@+id/settings_content">
         <ToggleButton
             android:layout_width="wrap_content"
@@ -34,7 +38,10 @@
             android:id="@+id/toggleSmoothingButton"
             android:layout_gravity="center"
             android:checked="true"
-            android:onClick="toggleSmoothing"/>
+            android:onClick="toggleSmoothing"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/toggleLineButton"
+            android:layout_toEndOf="@+id/toggleLineButton" />
         <ToggleButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -43,45 +50,85 @@
             android:id="@+id/toggleLineButton"
             android:layout_gravity="center"
             android:checked="true"
-            android:onClick="toggleLineFeedback" />
+            android:onClick="toggleLineFeedback"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/toggleSmoothingButton"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignRight="@+id/toggleSmoothingButton"
+            android:layout_alignEnd="@+id/toggleSmoothingButton">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="78dp"
+                android:gravity="center"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/octave"
+                android:id="@+id/textView"
+                android:textAlignment="center" />
+
+            <NumberPicker
+                android:layout_width="match_parent"
+                android:layout_height="74dp"
+                android:id="@+id/numberPicker" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="bottom">
+        <com.levien.synthesizer.android.widgets.keyboard.KeyboardView
+            android:layout_width="match_parent"
+            android:layout_height="0px"
+            android:layout_weight="1"
+            android:visibility="gone"
+            android:id="@+id/keyboard_view" />
+
+        <FrameLayout android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:fitsSystemWindows="true">
+
+            <LinearLayout android:id="@+id/fullscreen_content_controls" style="?metaButtonBarStyle"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center_horizontal"
+                android:background="@color/black_overlay" android:orientation="horizontal"
+                tools:ignore="UselessParent">
+
+                <Button android:id="@+id/quit_button" style="?metaButtonBarButtonStyle"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="@string/quit_button"
+                    android:onClick="quit"/>
+
+                <Button android:id="@+id/settings_button" style="?metaButtonBarButtonStyle"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="@string/settings_button"
+                    android:onClick="displaySettings"/>
+
+                <Button android:id="@+id/keyboard_button" style="?metaButtonBarButtonStyle"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="@string/keyboard_button"
+                    android:onClick="displayKeyboard"/>
+
+                <Button android:id="@+id/main_view_button" style="?metaButtonBarButtonStyle"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="@string/main_view_button"
+                    android:onClick="displayMainView"/>
+
+            </LinearLayout>
+        </FrameLayout>
     </LinearLayout>
 
-    <!--<com.levien.synthesizer.android.widgets.keyboard.KeyboardView-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent" />-->
 
-    <!-- This FrameLayout insets its children based on system windows using
-         android:fitsSystemWindows. -->
-    <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
 
-        <LinearLayout android:id="@+id/fullscreen_content_controls" style="?metaButtonBarStyle"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:background="@color/black_overlay" android:orientation="horizontal"
-            tools:ignore="UselessParent">
-
-            <Button android:id="@+id/quit_button" style="?metaButtonBarButtonStyle"
-                android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="@string/quit_button"
-                android:onClick="quit"/>
-
-            <Button android:id="@+id/settings_button" style="?metaButtonBarButtonStyle"
-                android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="@string/settings_button"
-                android:onClick="displaySettings"/>
-
-            <Button android:id="@+id/keyboard_button" style="?metaButtonBarButtonStyle"
-                android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="@string/keyboard_button"
-                android:onClick="displayKeyboard"/>
-
-            <Button android:id="@+id/main_view_button" style="?metaButtonBarButtonStyle"
-                android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="@string/main_view_button"
-                android:onClick="displayMainView"/>
-
-        </LinearLayout>
-    </FrameLayout>
 
 </FrameLayout>

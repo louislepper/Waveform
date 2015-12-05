@@ -18,6 +18,8 @@ public class AudioThread extends Thread implements MidiListener{
     private static final int SAMPLE_RATE = 44100;
     private static final double BASE_FREQUENCY = Constants.C1_FREQUENCY;
     private static final int BASE_NOTE = Constants.C1_MIDI_NOTE;
+    private static final int NOTES_IN_SCALE = 12;
+
 
     //We haven't actually resized the wave. This is just an approximate number. This'll be off by a bunch depending on how small the wave is.
     private static final int WAVEFORM_SAMPLES = 2000;
@@ -96,20 +98,19 @@ public class AudioThread extends Thread implements MidiListener{
             if (!keyboardMode) {
                 buffer[i] = wrapped.get(((double) currentBasePlaybackLocation) * getStepForFrequency(Constants.getFrequencyByIndex(57)));
             } else {
-                buffer[i] = getSample(currentBasePlaybackLocation,wrapped,currentNotes);
+                buffer[i] = getSample(currentBasePlaybackLocation,wrapped);
             }
         }
         return currentBasePlaybackLocation;
     }
-    private short getSample(int currentBasePlaybackLocation, WaveformWrapper wrapped, List<Note> notesToPlay) {
+    private short getSample(int currentBasePlaybackLocation, WaveformWrapper wrapped) {
+        Note[] notesToPlay = currentNotes;
         double finalSample = 0;
-        synchronized (notesToPlay) {
-            int numNotes = notesToPlay.size();
-            for(Note n: notesToPlay) {
-                short sample = wrapped.get(((double) currentBasePlaybackLocation) * getStepForFrequency(Constants.getFrequencyByIndex(n.note)));
-                double velocityProportion = ((double) n.velocity) / 128.0;
-                finalSample += (sample * velocityProportion)/numNotes;
-            }
+        int numNotes = notesToPlay.length;
+        for(Note n: notesToPlay) {
+            short sample = wrapped.get(((double) currentBasePlaybackLocation) * getStepForFrequency(Constants.getFrequencyByIndex(n.note)));
+            double velocityProportion = ((double) n.velocity) / 128.0;
+            finalSample += (sample * velocityProportion)/numNotes;
         }
         return (short) finalSample;
     }
@@ -136,24 +137,35 @@ public class AudioThread extends Thread implements MidiListener{
         keyboardMode = false;
     }
 
-    private ArrayList<Note> unsafeNotes = new ArrayList<>(10);
-    final List<Note> currentNotes = Collections.synchronizedList(unsafeNotes);
+    Note[] currentNotes = new Note[0];
+
+
+    public void setOctave(int octave) {
+        scaleOffset = NOTES_IN_SCALE * octave;
+    }
+
+    private int scaleOffset = 24;
 
     public void onNoteOff(int channel, int note, int velocity) {
-        synchronized (currentNotes) {
-            currentNotes.remove(new Note(note + 24, velocity));
+        //Scale Offset
+        note += scaleOffset;
+        Note[] newNotes = new Note[currentNotes.length - 1];
+        for(int i = 0, o = 0; i < currentNotes.length; i++) {
+            if(currentNotes[i].note != note) {
+                newNotes[o] = currentNotes[i];
+                o++;
+            }
         }
+        currentNotes = newNotes;
         Log.d(TAG,"onNoteOff - channel = " + channel + ". note = " + note + ". velocity = " + velocity);
     }
 
     @Override
     public void onNoteOn(int channel, int note, int velocity) {
-        synchronized (currentNotes) {
-            currentNotes.add(new Note(note + 24, velocity));
-        }
-//        ArrayList<Note> newList = new ArrayList<>(10);
-//        newList.addAll(currentNotes);
-//        currentNotes = newList;
+        Note[] newNotes = new Note[currentNotes.length + 1];
+        System.arraycopy(currentNotes, 0, newNotes, 0, currentNotes.length);
+        newNotes[currentNotes.length] = new Note(note + scaleOffset, velocity);
+        currentNotes = newNotes;
         Log.d(TAG,"onNoteOn - channel = " + channel + ". note = " + note + ". velocity = " + velocity);
     }
 

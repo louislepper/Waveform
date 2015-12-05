@@ -1,11 +1,12 @@
 package com.louislepper.waveform;
 
 import android.content.SharedPreferences;
-import android.inputmethodservice.Keyboard;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.NumberPicker;
+import android.widget.ToggleButton;
 
 import com.levien.synthesizer.android.widgets.keyboard.KeyboardView;
 
@@ -18,34 +19,98 @@ import org.opencv.imgproc.Imgproc;
 
 public class MainActivity extends CameraActivity{
 
+    private static final String LINE_FEEDBACK = "lineFeedback";
+    private static final String SMOOTHING = "smoothing";
+
     private static AudioThread audioThread;
     private View settingsView;
     private boolean smoothing = true;
     private boolean lineFeedback = true;
     private KeyboardView keyboardView;
 
+    private SharedPreferences app_preferences;
+    private SharedPreferences.Editor editor;
+    private String currentScreen;
+
+    private NumberPicker numberPicker;
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final SharedPreferences app_preferences = getSharedPreferences("APP_PREFERENCES", MODE_PRIVATE);
+        app_preferences = getSharedPreferences("APP_PREFERENCES", MODE_PRIVATE);
+        editor = app_preferences.edit();
+
         settingsView = findViewById(R.id.settings_content);
         keyboardView = (KeyboardView) findViewById(R.id.keyboard_view);
-
-//        final SharedPreferences.Editor editor = app_preferences.edit();
-//        editor.putBoolean("SMOOTH_EDGES", false);
-//        editor.apply();
+        numberPicker = (NumberPicker) findViewById(R.id.numberPicker);
+        numberPicker.setMaxValue(8);
+        numberPicker.setMinValue(0);
     }
+
+    private static final String OCTAVE = "octave";
 
     @Override
     public void onPause()
     {
         super.onPause();
+        editor.putInt(OCTAVE, numberPicker.getValue());
+        editor.apply();
         audioThread.stopAudio();
         try {
             audioThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
             Log.d(TAG, "Audio track potentially wasn't freed!");
+        }
+    }
+
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        smoothing = app_preferences.getBoolean(SMOOTHING, true);
+        updateSmoothingButton();
+        lineFeedback = app_preferences.getBoolean(LINE_FEEDBACK, true);
+        updateLineFeedbackButton();
+        updateOctaveSelector();
+        switch (app_preferences.getString(SCREEN, NORMAL)) {
+            case NORMAL:
+                displayMainView(null);
+                break;
+            case SETTINGS:
+                displaySettings(null);
+                break;
+            case KEYBOARD:
+                displayKeyboard(null);
+                break;
+            default:
+                displayMainView(null);
+        }
+    }
+
+    private static final int DEFAULT_OCTAVE = 2;
+
+    private void updateOctaveSelector() {
+        numberPicker.setValue(app_preferences.getInt(OCTAVE, DEFAULT_OCTAVE));
+    }
+
+    private void updateSmoothingButton() {
+        final ToggleButton smoothingButton = (ToggleButton) findViewById(R.id.toggleSmoothingButton);
+        if (smoothing) {
+            smoothingButton.setChecked(true);
+        } else {
+            smoothingButton.setChecked(false);
+        }
+    }
+
+    private void updateLineFeedbackButton() {
+        final ToggleButton smoothingButton = (ToggleButton) findViewById(R.id.toggleLineButton);
+        if (lineFeedback) {
+            smoothingButton.setChecked(true);
+        } else {
+            smoothingButton.setChecked(false);
         }
     }
 
@@ -87,6 +152,13 @@ public class MainActivity extends CameraActivity{
         if(audioThread == null || !audioThread.isAlive()) {
             audioThread = new AudioThread();
             keyboardView.setMidiListener(audioThread);
+            //This should maybe get it's value from preferences. Not sure if number picker will have been set in time.
+            audioThread.setOctave(numberPicker.getValue());
+            if (currentScreen.equals(KEYBOARD)) {
+                audioThread.keyboardOn();
+            } else {
+                audioThread.keyboardOff();
+            }
             audioThread.start();
         }
 
@@ -181,27 +253,41 @@ public class MainActivity extends CameraActivity{
         return -1;
     }
 
+    private final String SCREEN = "screen";
+    private final String SETTINGS = "settings";
+    private final String NORMAL = "normal";
+    private final String KEYBOARD = "keyboard";
+
     public void displaySettings(View view) {
         allViewsOff();
         settingsView.setVisibility(View.VISIBLE);
+        currentScreen = SETTINGS;
+        editor.putString(SCREEN, SETTINGS);
     }
+
     public void displayMainView(View view) {
         allViewsOff();
-        mOpenCvCameraView.setVisibility(View.VISIBLE);
+        currentScreen = NORMAL;
+        editor.putString(SCREEN, NORMAL);
     }
 
     public void displayKeyboard(View view) {
         allViewsOff();
-        mOpenCvCameraView.setVisibility(View.VISIBLE);
         keyboardView.setVisibility(View.VISIBLE);
-        audioThread.keyboardOn();
+        if(audioThread != null) {
+            audioThread.setOctave(numberPicker.getValue());
+            audioThread.keyboardOn();
+        }
+        currentScreen = KEYBOARD;
+        editor.putString(SCREEN, KEYBOARD);
     }
 
     private void allViewsOff(){
-        mOpenCvCameraView.setVisibility(View.GONE);
         settingsView.setVisibility(View.GONE);
         keyboardView.setVisibility(View.GONE);
-        audioThread.keyboardOff();
+        if(audioThread != null) {
+            audioThread.keyboardOff();
+        }
     }
 
     public void quit(View view) {
@@ -225,10 +311,12 @@ public class MainActivity extends CameraActivity{
 
     public void toggleSmoothing(View view) {
         smoothing = !smoothing;
+        editor.putBoolean(SMOOTHING, smoothing);
     }
 
     public void toggleLineFeedback(View view) {
         lineFeedback = !lineFeedback;
+        editor.putBoolean(LINE_FEEDBACK, lineFeedback);
     }
 
     private class ArrayMat {

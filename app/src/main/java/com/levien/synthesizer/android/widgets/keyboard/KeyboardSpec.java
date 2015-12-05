@@ -114,6 +114,6 @@ public class KeyboardSpec {
     public float maxX;
     private int ix_;
 
-    private static final int B = Color.GRAY;
-    private static final int W = Color.WHITE;
+    private static final int B = Color.argb(175, Color.red(Color.GRAY), Color.green(Color.GRAY), Color.blue(Color.GRAY));
+    private static final int W = Color.argb(175, Color.red(Color.WHITE), Color.green(Color.WHITE), Color.blue(Color.WHITE));
 }
