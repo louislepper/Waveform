@@ -1,4 +1,4 @@
-# README #
+# Waveform #
 
 This is an Android app that detects lines through your phone's camera, and then interprets those lines as sound waves. Those sound waves can be played directly, or they can be mapped to keyboard tones, and played on the onscreen keyboard.
 
@@ -10,3 +10,5 @@ That being said, you can also just point your phone at anything, and hear what i
 
 
 For development on this project, you'll need to [setup and get familiar with openCV](http://opencv.org/platforms/android.html). If you have any questions just ask around here or send me a message.
+
+Apologies for the size of the git repo, I included the OpenCV library files. 
