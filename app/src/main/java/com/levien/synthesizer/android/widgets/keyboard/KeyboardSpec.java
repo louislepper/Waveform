@@ -1,3 +1,5 @@
+//Note. Changes from original version: Colours are different.
+
 /*
  * Copyright 2013 Google Inc.
  *
