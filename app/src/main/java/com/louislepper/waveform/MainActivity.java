@@ -288,8 +288,6 @@ public class MainActivity extends CameraActivity{
         }
     }
 
-
-
     public void toggleSmoothing(View view) {
         smoothing = !smoothing;
         editor.putBoolean(SMOOTHING, smoothing);
@@ -327,7 +325,6 @@ public class MainActivity extends CameraActivity{
         }
 
         public Mat toMat() {
-            //Is this the right type?
             Mat mat = new Mat(rows, cols, Imgproc.COLOR_RGBA2GRAY);
             mat.put(0,0,array);
             return mat;

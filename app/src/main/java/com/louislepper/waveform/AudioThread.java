@@ -84,7 +84,7 @@ public class AudioThread extends Thread implements MidiListener{
             //Resetting currentBasePlaybackLocation if it gets too large.
             if (currentBasePlaybackLocation > 1000000) {
 
-                //This is me attempting to avoid a click when I reset currentBasePlaybackLocation, but I haven't tested this.
+                //This is me attempting to avoid a click sound when I reset currentBasePlaybackLocation, but I haven't tested this.
                 currentBasePlaybackLocation = Constants.moduloLowerAndUpperBound(currentBasePlaybackLocation, wrapped.size(), 0);
             }
 
