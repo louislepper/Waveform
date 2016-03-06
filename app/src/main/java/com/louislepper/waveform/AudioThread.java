@@ -1,6 +1,5 @@
 package com.louislepper.waveform;
 
-import android.inputmethodservice.KeyboardView;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
@@ -8,38 +7,30 @@ import android.util.Log;
 
 import com.levien.synthesizer.core.midi.MidiListener;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class AudioThread extends Thread implements MidiListener{
     private static final double AMPLITUDE = Short.MAX_VALUE;
     private static final int SAMPLE_RATE = 44100;
-    private static final double BASE_FREQUENCY = Constants.C1_FREQUENCY;
-    private static final int BASE_NOTE = Constants.C1_MIDI_NOTE;
     private static final int NOTES_IN_SCALE = 12;
 
-
-    //We haven't actually resized the wave. This is just an approximate number. This'll be off by a bunch depending on how small the wave is.
+    //We haven't actually resized the wave. This is just an approximate number.
+    //This will be off by a certain amount depending on how small the wave is.
     private static final int WAVEFORM_SAMPLES = 2000;
+
     public static final String TAG = "AudioThread";
 
     private volatile WaveformWrapper wrapped;
 
     private boolean isRunning = true;
 
-    private double examplePh;
-    private double exampleStep;
     private boolean keyboardMode = false;
 
 
-    public double setWaveform(short[] processedImageArray, SampleInterpolator.StartAndEnd startAndEnd) {
+    public void setWaveform(short[] processedImageArray, SampleInterpolator.StartAndEnd startAndEnd) {
         short[] wave = Arrays.copyOfRange(processedImageArray, startAndEnd.getStart(), startAndEnd.getEnd() + 1);
         wave = WaveStretcher.normalize(wave);
         wrapped = new WaveformWrapper(wave);
-
-        return exampleStep;
     }
 
     public void stopAudio(){
@@ -71,11 +62,14 @@ public class AudioThread extends Thread implements MidiListener{
             //This is overly conservative, but I want to block for as little time as possible if we've been stopped.
             if(isRunning) {
                 audioTrack.write(buffer, 0, bufferSize);
-                //TODO: Why is this necessary to avoid freezes?
+
+                //For some reason the app was freezing if I didn't garbage collect here.
+                //I can't seem to reproduce that on latest Android, but I'll leave it just to be conservative
+                //It probably does slow the app down considerably.
                 System.gc();
             }
         }
-        //Todo: need to find a way to actually release these.
+
         audioTrack.pause();
         audioTrack.flush();
         audioTrack.release();
@@ -87,22 +81,22 @@ public class AudioThread extends Thread implements MidiListener{
 
     private int populateBuffer(short[] buffer, int currentBasePlaybackLocation) {
         for (int i = 0; i < buffer.length; i++, currentBasePlaybackLocation++) {
-            //This line is probably unneeded, but I don't want the value overflowing and throwing an exception (does java do that?)
-            //examplePh = examplePh % WAVEFORM_SAMPLES;
-            //                    examplePh = examplePh % Integer.MAX_VALUE - 5;
-            if (examplePh > 100000.0) {
-                //This line is probably meaningless, can probably just set it to zero.
-                examplePh = Constants.moduloLowerAndUpperBound(examplePh, wrapped.size(), 0);
+            //Resetting currentBasePlaybackLocation if it gets too large.
+            if (currentBasePlaybackLocation > 1000000) {
+
+                //This is me attempting to avoid a click when I reset currentBasePlaybackLocation, but I haven't tested this.
+                currentBasePlaybackLocation = Constants.moduloLowerAndUpperBound(currentBasePlaybackLocation, wrapped.size(), 0);
             }
 
             if (!keyboardMode) {
                 buffer[i] = wrapped.get(((double) currentBasePlaybackLocation) * getStepForFrequency(Constants.getFrequencyByIndex(57)));
             } else {
-                buffer[i] = getSample(currentBasePlaybackLocation,wrapped);
+                buffer[i] = getSample(currentBasePlaybackLocation, wrapped);
             }
         }
         return currentBasePlaybackLocation;
     }
+
     private short getSample(int currentBasePlaybackLocation, WaveformWrapper wrapped) {
         Note[] notesToPlay = currentNotes;
         double finalSample = 0;
@@ -124,11 +118,6 @@ public class AudioThread extends Thread implements MidiListener{
         return waveform;
     }
 
-    public void toggleKeyboardMode() {
-        //Todo: Should maybe do something to ensure this persists past AudioThread being killed.
-        keyboardMode = !keyboardMode;
-    }
-
     public void keyboardOn() {
         keyboardMode = true;
     }
@@ -139,7 +128,6 @@ public class AudioThread extends Thread implements MidiListener{
 
     Note[] currentNotes = new Note[0];
 
-
     public void setOctave(int octave) {
         scaleOffset = NOTES_IN_SCALE * octave;
     }
@@ -147,7 +135,6 @@ public class AudioThread extends Thread implements MidiListener{
     private int scaleOffset = 24;
 
     public void onNoteOff(int channel, int note, int velocity) {
-        //Scale Offset
         note += scaleOffset;
         Note[] newNotes = new Note[currentNotes.length - 1];
         for(int i = 0, o = 0; i < currentNotes.length; i++) {

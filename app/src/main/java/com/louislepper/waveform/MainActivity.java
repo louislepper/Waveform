@@ -15,12 +15,13 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-
-
 public class MainActivity extends CameraActivity{
 
     private static final String LINE_FEEDBACK = "lineFeedback";
     private static final String SMOOTHING = "smoothing";
+
+    private static final String OCTAVE = "octave";
+    private static final int DEFAULT_OCTAVE = 2;
 
     private static AudioThread audioThread;
     private View settingsView;
@@ -48,7 +49,6 @@ public class MainActivity extends CameraActivity{
         numberPicker.setMinValue(0);
     }
 
-    private static final String OCTAVE = "octave";
 
     @Override
     public void onPause()
@@ -89,8 +89,6 @@ public class MainActivity extends CameraActivity{
                 displayMainView(null);
         }
     }
-
-    private static final int DEFAULT_OCTAVE = 2;
 
     private void updateOctaveSelector() {
         numberPicker.setValue(app_preferences.getInt(OCTAVE, DEFAULT_OCTAVE));
@@ -133,6 +131,7 @@ public class MainActivity extends CameraActivity{
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
         Imgproc.dilate(currentMat, currentMat, kernel);
 
+        //Canny edge detection
         Imgproc.Canny(currentMat, currentMat, CANNY_LOW, CANNY_HIGH);
 
         if(soundData == null || soundData.length != currentMat.cols()) {
@@ -141,18 +140,16 @@ public class MainActivity extends CameraActivity{
 
         imageArrayToSoundArray(new ArrayMat(currentMat), soundData);
 
-
         SampleInterpolator.StartAndEnd startAndEnd = SampleInterpolator.interpolateInvalidSamples(soundData);
 
         if(smoothing) {
             soundData = SampleCrossfader.crossfade(soundData, startAndEnd.getStart(), startAndEnd.getLength());
         }
 
-
         if(audioThread == null || !audioThread.isAlive()) {
             audioThread = new AudioThread();
             keyboardView.setMidiListener(audioThread);
-            //This should maybe get it's value from preferences. Not sure if number picker will have been set in time.
+            //This should maybe get its value from preferences. Not sure if number picker will have been set in time.
             audioThread.setOctave(numberPicker.getValue());
             if (currentScreen.equals(KEYBOARD)) {
                 audioThread.keyboardOn();
@@ -163,50 +160,34 @@ public class MainActivity extends CameraActivity{
         }
 
         //Send array here.
-        final double step = audioThread.setWaveform(soundData, startAndEnd);
+        audioThread.setWaveform(soundData, startAndEnd);
 
         if (lineFeedback) {
             Imgproc.cvtColor(currentMat, currentMat, Imgproc.COLOR_GRAY2RGBA);
 
-            soundArrayToImage(soundData, currentMat, (int) Math.round(step));
+            soundArrayToImage(soundData, currentMat);
         }
+
         return currentMat;
     }
 
-    private Mat soundArrayToImage(short[] array, Mat image, int intStep) {
+    private Mat soundArrayToImage(short[] array, Mat image) {
         final double[] red = new double[] {255.0,0.0,0.0,0.0};
-        final double[] green = new double[] {0.0,255.0,0.0,0.0};
         for(int x = 0; x < image.cols(); x++) {
             if(!(array[x] == -1)){
                 image.put(array[x],x,red);
-                if(intStep != 0 && x % intStep == 0) {
-                    image.put(moreThanZero(array[x] - 1), x, green);
-                    image.put(array[x], x, green);
-                    image.put(lessThanValue(array[x] + 1, image.cols()), x, green);
-                }
             }
         }
         return image;
     }
 
-    private int moreThanZero(int value) {
-        if(value < 0) return 0;
-        return value;
-    }
-
-    private int lessThanValue(int value, int max) {
-        if(value >= max) return max = 1;
-        return value;
-    }
-
     private void imageArrayToSoundArray(ArrayMat mat, short[] soundData) {
 
-        //Find a white pixel in each column of the image.
+        //Find a white pixel in the first column of the image.
         //Once a white pixel is found, start searching the next column near to where the previous pixel was found.
         int previousWhitePoint = 0;
         for(int x = 0; x < mat.cols(); x++) {
             short newPoint = smartFindWhitePointInColumn(mat, x, previousWhitePoint);
-            //TODO: Add a check here to ensure that a int is large enough.
             soundData[x] = newPoint;
             if(newPoint != -1) {
                 previousWhitePoint = newPoint;
@@ -223,32 +204,32 @@ public class MainActivity extends CameraActivity{
 
     private short smartFindWhitePointInColumn(ArrayMat image, int column, int startingPoint) {
 
-        int topBound = startingPoint;
-        int lowerBound = startingPoint;
+        int highIndex = startingPoint;
+        int lowIndex = startingPoint;
 
-        while(topBound < image.rows && lowerBound >= 0)  {
-            if(image.get(topBound, column) < 0) {
-                return (short) topBound;
+        while(highIndex < image.rows && lowIndex >= 0)  {
+            if(image.get(highIndex, column) < 0) {
+                return (short) highIndex;
             }
-            topBound++;
-            if(image.get(lowerBound, column) < 0) {
-                return (short) lowerBound;
+            highIndex++;
+            if(image.get(lowIndex, column) < 0) {
+                return (short) lowIndex;
             }
-            lowerBound--;
+            lowIndex--;
         }
 
-        while(topBound < image.rows) {
-            if(image.get(topBound, column) < 0) {
-                return (short) topBound;
+        while(highIndex < image.rows) {
+            if(image.get(highIndex, column) < 0) {
+                return (short) highIndex;
             }
-            topBound++;
+            highIndex++;
         }
 
-        while(lowerBound >= 0)  {
-            if(image.get(lowerBound, column) < 0) {
-                return (short) lowerBound;
+        while(lowIndex >= 0)  {
+            if(image.get(lowIndex, column) < 0) {
+                return (short) lowIndex;
             }
-            lowerBound--;
+            lowIndex--;
         }
         return -1;
     }

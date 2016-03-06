@@ -4,14 +4,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceView;
 
-import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Mat;
-import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
 
 public abstract class CameraActivity extends FullscreenActivityParent implements CameraBridgeViewBase.CvCameraViewListener2{
     protected CameraBridgeViewBase mOpenCvCameraView;
@@ -58,7 +54,6 @@ public abstract class CameraActivity extends FullscreenActivityParent implements
     public void onResume()
     {
         super.onResume();
-
         if (!OpenCVLoader.initDebug()) {
             Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);

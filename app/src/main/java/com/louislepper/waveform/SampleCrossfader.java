@@ -2,15 +2,32 @@ package com.louislepper.waveform;
 
 public class SampleCrossfader {
     private SampleCrossfader(){}
+
+    /**
+     * When someone draws a soundwave, the start and the end of the line aren't going to match up.
+     * This results in a coarser sound, and potentially isn't what the user intended, so we smooth out
+     * this bump here.
+     *
+     * This method changes the array in-place, for performance reasons.
+     *
+     * @param shortSoundArray The soundwave array
+     * @param start Where the first sample occurs
+     * @param length The size of the array
+     * @return Smoothed array
+     */
     public static short[] crossfade(short[] shortSoundArray, int start, int length) {
         if(shortSoundArray.length == 0) return shortSoundArray;
         if(length < 2) return  shortSoundArray;
 
-        //double[] soundArray = Doubles.toArray(Shorts.asList(Arrays.copyOfRange(shortSoundArray, start, length)));
         double firstSample = (double) shortSoundArray[start];
         double lastSample  = (double) shortSoundArray[start + length - 1];
-        if(equals(firstSample, lastSample)) return shortSoundArray;
 
+        if(equals(firstSample, lastSample)) return shortSoundArray;
+        //                   --                         --
+        //                 --  --                         --
+        //End of wave:   --      --     Start of wave:       --    Midpoint: --
+        //                         --                          --
+        //                           --
         double midPoint = halfwayBetween(firstSample, lastSample);
 
         double bigger = Math.max(firstSample, lastSample);
@@ -29,12 +46,32 @@ public class SampleCrossfader {
         shortSoundArray[index] = (short) midPoint;
         int midPointIndex = index;
 
+        //We set each sample to be the midpoint between the sample value, and the baseline, until
+        //the new line intersects with an original sample
         short baseLine = (short) smaller;
 
-        //Want to catch if it goes past too.
+        //Here's a basic example:
+        //This represents the start and end of a sample array, shown joined together
+        //eg. i = 99, 100, 101, 0, 1, 2, 3
+        //             __________
+        //           /        . /
+        //          /       .  /
+        //         /       .  /
+        //        /      .   /
+        //       /     *    /
+        //      /    .     /
+        //     /   .      /
+        //	  / .        /
+        //   /__________/
+        // The diagonal lines(/) represent the original sample values
+        // The star(*) represents the midpoint
+        // The underscores(_) represent each baseline.
+        // The new soundwave array is made by replacing each value with the midpoint of it and the baseline
+
+
+       //If the next sample is past the baseline, then we've finished smoothing for this direction.
         while(shortSoundArray[Constants.moduloLowerAndUpperBound(index + direction, start + length, start)] > baseLine) {
             index = Constants.moduloLowerAndUpperBound(index + direction, start + length, start);
-            //TODO: Should we change the original array? Or make a new one?
             shortSoundArray[index] = (short) halfwayBetween(baseLine, shortSoundArray[index]);
         }
         index = index + direction;
@@ -45,6 +82,7 @@ public class SampleCrossfader {
 
         int topLineIncrementer = direction * -1;
         int topLineIndex = index;
+
         while(shortSoundArray[Constants.moduloLowerAndUpperBound((index + direction), start + length, start)] < topLine.getyPoint(topLineIndex + topLineIncrementer)) {
             shortSoundArray[Constants.moduloLowerAndUpperBound((index + direction), start + length, start)] = (short) halfwayBetween(topLine.getyPoint(topLineIndex + topLineIncrementer), shortSoundArray[Constants.moduloLowerAndUpperBound((index + direction), start + length, start)]);
             topLineIndex += topLineIncrementer;
@@ -68,25 +106,17 @@ public class SampleCrossfader {
     final private static int LEFT = -1;
     final private static int RIGHT = 1;
 
-    //Visible for testing
     public static class Line{
-        private double xStart, yStart, xEnd, yEnd, m, b;
+        private double gradient, yIntercept;
 
         public Line(double xStart, double yStart, double xEnd, double yEnd) {
             //y = mx + b
-            this.xStart = xStart;
-            this.yStart = yStart;
-            this.xEnd = xEnd;
-            this.yEnd = yEnd;
-            this.m = (yEnd - yStart)/(xEnd - xStart);
-            //y - b = mx
-            //-b = mx - y
-            //b = y -mx
-            this.b = yStart - m * xStart;
+            this.gradient = (yEnd - yStart)/(xEnd - xStart);
+            this.yIntercept = yStart - gradient * xStart;
         }
 
         public double getyPoint(double xValue){
-            return m * xValue + b;
+            return gradient * xValue + yIntercept;
         }
     }
 
