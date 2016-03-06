@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Louis Lepper.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.louislepper.waveform;
 
 import junit.framework.TestCase;
@@ -6,9 +22,6 @@ public class ConstantsTest extends TestCase {
 
     public static final int D7_MIDI_NOTE = 98;
     public static final double D7_FREQUENCY = 2349.31814;
-
-    public static final int A0_MIDI_NOTE = 21;
-    public static final double A0_FREQUENCY = 27.5;
 
     public void testMidiC1IndexToFrequency() {
         final double generatedFrequency = Constants.getFrequencyByIndex(Constants.C1_MIDI_NOTE);
@@ -19,20 +32,6 @@ public class ConstantsTest extends TestCase {
     public void testMidiD7IndexToFrequency() {
         final double generatedFrequency = Constants.getFrequencyByIndex(D7_MIDI_NOTE);
         final double knownFrequency = D7_FREQUENCY;
-        assertTrue("Frequencies should be equal. Known frequency = " + knownFrequency +". Generated = " + generatedFrequency, equals(generatedFrequency, knownFrequency));
-    }
-
-    public void testC1D7Offset() {
-        final double generatedFrequency = Constants.getOffsetNote(Constants.C1_FREQUENCY, D7_MIDI_NOTE - Constants.C1_MIDI_NOTE);
-        final double knownFrequency = D7_FREQUENCY;
-
-        assertTrue("Frequencies should be equal. Known frequency = " + knownFrequency +". Generated = " + generatedFrequency, equals(generatedFrequency, knownFrequency));
-    }
-
-    public void testC1A0Offset() {
-        final double generatedFrequency = Constants.getOffsetNote(Constants.C1_FREQUENCY, A0_MIDI_NOTE - Constants.C1_MIDI_NOTE);
-        final double knownFrequency = A0_FREQUENCY;
-
         assertTrue("Frequencies should be equal. Known frequency = " + knownFrequency +". Generated = " + generatedFrequency, equals(generatedFrequency, knownFrequency));
     }
 
