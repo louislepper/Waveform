@@ -16,7 +16,9 @@
 
 package com.louislepper.waveform;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -55,6 +57,13 @@ public class MainActivity extends CameraActivity{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        AudioManager audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        int streamMaxVolume = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        // Always start quiet, so as not to frighten people.
+        int desiredInitialVolume = streamMaxVolume / 10;
+        audio.setStreamVolume(AudioManager.STREAM_MUSIC, desiredInitialVolume, AudioManager.FLAG_SHOW_UI);
+
         app_preferences = getSharedPreferences("APP_PREFERENCES", MODE_PRIVATE);
         editor = app_preferences.edit();
 
@@ -72,13 +81,7 @@ public class MainActivity extends CameraActivity{
         super.onPause();
         editor.putInt(OCTAVE, numberPicker.getValue());
         editor.apply();
-        audioThread.stopAudio();
-        try {
-            audioThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            Log.d(TAG, "Audio track potentially wasn't freed!");
-        }
+        stopAudio();
     }
 
 
@@ -288,19 +291,22 @@ public class MainActivity extends CameraActivity{
     }
 
     public void quit(View view) {
-        if (mOpenCvCameraView != null)
+        if (mOpenCvCameraView != null) {
             mOpenCvCameraView.disableView();
-        audioThread.stopAudio();
-        try {
-            audioThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            Log.d(TAG,"Audio track potentially wasn't freed!");
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            this.finishAffinity();
-        } else {
-            this.finish();
+        stopAudio();
+        this.finishAffinity();
+    }
+
+    private void stopAudio() {
+        if (audioThread != null) {
+            audioThread.stopAudio();
+            try {
+                audioThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                Log.d(TAG,"Audio track potentially wasn't freed!");
+            }
         }
     }
 

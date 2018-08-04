@@ -16,7 +16,11 @@
 
 package com.louislepper.waveform;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.SurfaceView;
 
@@ -26,17 +30,54 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
 public abstract class CameraActivity extends FullscreenActivityParent implements CameraBridgeViewBase.CvCameraViewListener2{
+    private static final int REQUEST_TO_ACCESS_CAMERA = 1;
     protected CameraBridgeViewBase mOpenCvCameraView;
     static{ System.loadLibrary("opencv_java3"); }
+
+    private CameraActivity thisActivity;
+
+    public CameraActivity() {
+        thisActivity = this;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_content);;
+    }
+
+    private void initialiseCamera() {
+        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_content);
 
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
 
         mOpenCvCameraView.setCvCameraViewListener(this);
+
+        if (!OpenCVLoader.initDebug()) {
+            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+        } else {
+            Log.d(TAG, "OpenCV library found inside package. Using it!");
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_TO_ACCESS_CAMERA: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    initialiseCamera();
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    this.finishAffinity();
+                }
+                return;
+            }
+        }
     }
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -70,12 +111,13 @@ public abstract class CameraActivity extends FullscreenActivityParent implements
     public void onResume()
     {
         super.onResume();
-        if (!OpenCVLoader.initDebug()) {
-            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+        if (ContextCompat.checkSelfPermission(thisActivity, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(thisActivity,
+                    new String[]{Manifest.permission.CAMERA},
+                    REQUEST_TO_ACCESS_CAMERA);
         } else {
-            Log.d(TAG, "OpenCV library found inside package. Using it!");
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+            initialiseCamera();
         }
     }
 
