@@ -1,14 +1,17 @@
-package com.example.nativeopencvandroidtemplate
+package com.louislepper.waveform
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import android.util.Log
 import android.view.SurfaceView
 import android.view.WindowManager
+import android.widget.Button
 import android.widget.Toast
+import com.louislepper.waveform.OriginalActivity
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.LoaderCallbackInterface
@@ -56,6 +59,12 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
         mOpenCvCameraView!!.visibility = SurfaceView.VISIBLE
 
         mOpenCvCameraView!!.setCvCameraViewListener(this)
+
+        val buttonNavigate = findViewById<Button>(R.id.buttonNavigate)
+        buttonNavigate.setOnClickListener {
+            val intent = Intent(this@MainActivity, OriginalActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     override fun onRequestPermissionsResult(

@@ -23,7 +23,8 @@ import android.view.WindowManager;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.nativeopencvandroidtemplate.R;
+import com.louislepper.waveform.R;
+
 
 public class FullscreenActivityParent extends AppCompatActivity {
     protected static final String TAG = "FullscreenActivity";
@@ -33,11 +34,9 @@ public class FullscreenActivityParent extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//TODO
-//        setContentView(R.layout.activity_fullscreen);
+        setContentView(R.layout.activity_fullscreen);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-//TODO
-//        mContentView = findViewById(R.id.fullscreen_content);
+        mContentView = findViewById(R.id.fullscreen_content);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {

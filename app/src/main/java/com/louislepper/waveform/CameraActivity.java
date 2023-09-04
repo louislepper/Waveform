@@ -25,6 +25,8 @@ import android.view.SurfaceView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.louislepper.waveform.R;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
@@ -47,8 +49,7 @@ public abstract class CameraActivity extends FullscreenActivityParent implements
     }
 
     private void initialiseCamera() {
-// TODO
-//        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_content);
+        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_content);
 
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
 

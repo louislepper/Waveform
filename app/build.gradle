@@ -7,7 +7,7 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 33
     defaultConfig {
-        applicationId "com.example.nativeopencvandroidtemplate"
+        applicationId "com.louislepper.waveform"
         minSdkVersion 28
         targetSdkVersion 33
         versionCode 1

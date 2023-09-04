@@ -1,4 +1,4 @@
-package com.example.nativeopencvandroidtemplate
+package com.louislepper.waveform
 
 import org.junit.Test
 

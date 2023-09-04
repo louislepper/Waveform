@@ -19,13 +19,13 @@ package com.louislepper.waveform;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.NumberPicker;
 import android.widget.ToggleButton;
 
+import com.louislepper.waveform.R;
 import com.levien.synthesizer.android.widgets.keyboard.KeyboardView;
 
 import org.opencv.android.CameraBridgeViewBase;
@@ -33,7 +33,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-public class MainActivity extends CameraActivity{
+public class OriginalActivity extends CameraActivity{
 
     private static final String LINE_FEEDBACK = "lineFeedback";
     private static final String SMOOTHING = "smoothing";
@@ -66,10 +66,9 @@ public class MainActivity extends CameraActivity{
 
         app_preferences = getSharedPreferences("APP_PREFERENCES", MODE_PRIVATE);
         editor = app_preferences.edit();
-//TODO:
-//        settingsView = findViewById(R.id.settings_content);
-//        keyboardView = (KeyboardView) findViewById(R.id.keyboard_view);
-//        numberPicker = (NumberPicker) findViewById(R.id.numberPicker);
+        settingsView = findViewById(R.id.settings_content);
+        keyboardView = (KeyboardView) findViewById(R.id.keyboard_view);
+        numberPicker = (NumberPicker) findViewById(R.id.numberPicker);
         numberPicker.setMaxValue(8);
         numberPicker.setMinValue(0);
     }
@@ -114,24 +113,21 @@ public class MainActivity extends CameraActivity{
     }
 
     private void updateSmoothingButton() {
-
-        //TODO:
-//        final ToggleButton smoothingButton = (ToggleButton) findViewById(R.id.toggleSmoothingButton);
-//        if (smoothing) {
-//            smoothingButton.setChecked(true);
-//        } else {
-//            smoothingButton.setChecked(false);
-//        }
+        final ToggleButton smoothingButton = (ToggleButton) findViewById(R.id.toggleSmoothingButton);
+        if (smoothing) {
+            smoothingButton.setChecked(true);
+        } else {
+            smoothingButton.setChecked(false);
+        }
     }
 
     private void updateLineFeedbackButton() {
-        //TODO:
-//        final ToggleButton smoothingButton = (ToggleButton) findViewById(R.id.toggleLineButton);
-//        if (lineFeedback) {
-//            smoothingButton.setChecked(true);
-//        } else {
-//            smoothingButton.setChecked(false);
-//        }
+        final ToggleButton smoothingButton = (ToggleButton) findViewById(R.id.toggleLineButton);
+        if (lineFeedback) {
+            smoothingButton.setChecked(true);
+        } else {
+            smoothingButton.setChecked(false);
+        }
     }
 
     private final int CANNY_LOW = 10;
