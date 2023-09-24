@@ -99,6 +99,11 @@
                     android:layout_weight="1" android:text="@string/quit_button"
                     android:onClick="quit"/>
 
+                <Button android:id="@+id/pause_button" style="?metaButtonBarButtonStyle"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="@string/pause_button"
+                    android:onClick="pause"/>
+
                 <Button android:id="@+id/settings_button" style="?metaButtonBarButtonStyle"
                     android:layout_width="0dp" android:layout_height="wrap_content"
                     android:layout_weight="1" android:text="@string/settings_button"

@@ -25,15 +25,13 @@ import android.view.View;
 import android.widget.NumberPicker;
 import android.widget.ToggleButton;
 
-import com.louislepper.waveform.R;
 import com.levien.synthesizer.android.widgets.keyboard.KeyboardView;
 
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Mat;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-public class OriginalActivity extends CameraActivity{
+public class OriginalActivity extends CameraActivity {
 
     private static final String LINE_FEEDBACK = "lineFeedback";
     private static final String SMOOTHING = "smoothing";
@@ -141,17 +139,17 @@ public class OriginalActivity extends CameraActivity{
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         Mat currentMat = inputFrame.rgba();
 
-        Imgproc.cvtColor(currentMat, currentMat, Imgproc.COLOR_RGBA2GRAY);
-        Imgproc.GaussianBlur(currentMat, currentMat, new Size(5, 5), 2, 2);
-        Imgproc.threshold(currentMat, currentMat, LIGHT_THRESH, LIGHT_THRESH, Imgproc.THRESH_TRUNC);
-        Imgproc.GaussianBlur(currentMat, currentMat, new Size(5, 5), 2, 2);
-        Imgproc.GaussianBlur(currentMat, currentMat, new Size(9, 9), 0, 0);
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
-        Imgproc.dilate(currentMat, currentMat, kernel);
-
-        //Canny edge detection
-        Imgproc.Canny(currentMat, currentMat, CANNY_LOW, CANNY_HIGH);
-
+//        Imgproc.cvtColor(currentMat, currentMat, Imgproc.COLOR_RGBA2GRAY);
+//        Imgproc.GaussianBlur(currentMat, currentMat, new Size(5, 5), 2, 2);
+//        Imgproc.threshold(currentMat, currentMat, LIGHT_THRESH, LIGHT_THRESH, Imgproc.THRESH_TRUNC);
+//        Imgproc.GaussianBlur(currentMat, currentMat, new Size(5, 5), 2, 2);
+//        Imgproc.GaussianBlur(currentMat, currentMat, new Size(9, 9), 0, 0);
+//        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
+//        Imgproc.dilate(currentMat, currentMat, kernel);
+//
+//        //Canny edge detection
+//        Imgproc.Canny(currentMat, currentMat, CANNY_LOW, CANNY_HIGH);
+//
         if(soundData == null || soundData.length != currentMat.cols()) {
             soundData = new short[currentMat.cols()];
         }
@@ -166,9 +164,9 @@ public class OriginalActivity extends CameraActivity{
 
         if(audioThread == null || !audioThread.isAlive()) {
             audioThread = new AudioThread();
-            keyboardView.setMidiListener(audioThread);
+//            keyboardView.setMidiListener(audioThread);
             //This should maybe get its value from preferences. Not sure if number picker will have been set in time.
-            audioThread.setOctave(numberPicker.getValue());
+//            audioThread.setOctave(numberPicker.getValue());
             if (currentScreen.equals(KEYBOARD)) {
                 audioThread.keyboardOn();
             } else {
@@ -319,40 +317,4 @@ public class OriginalActivity extends CameraActivity{
         editor.putBoolean(LINE_FEEDBACK, lineFeedback);
     }
 
-    private class ArrayMat {
-        private final int rows, cols;
-        private final byte[] array;
-
-        public ArrayMat(int rows, int cols, byte[] array) {
-            this.rows = rows;
-            this.cols = cols;
-            this.array = array;
-        }
-
-        public ArrayMat(Mat mat) {
-            //TODO: Not sure if this will work for colour images.
-            int size = (int) (mat.total() * mat.channels());
-            array = new byte[size];
-            this.rows = mat.rows();
-            this.cols = mat.cols();
-            mat.get(0, 0, array);
-        }
-
-        public int cols() {
-            return cols;
-        }
-        public int rows() {
-            return rows;
-        }
-
-        public Mat toMat() {
-            Mat mat = new Mat(rows, cols, Imgproc.COLOR_RGBA2GRAY);
-            mat.put(0,0,array);
-            return mat;
-        }
-
-        public byte get(int row, int col) {
-            return array[cols * row + col];
-        }
-    }
 }

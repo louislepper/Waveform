@@ -25,8 +25,6 @@ import android.view.SurfaceView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.louislepper.waveform.R;
-
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
@@ -35,7 +33,7 @@ import org.opencv.android.OpenCVLoader;
 public abstract class CameraActivity extends FullscreenActivityParent implements CameraBridgeViewBase.CvCameraViewListener2{
     private static final int REQUEST_TO_ACCESS_CAMERA = 1;
     protected CameraBridgeViewBase mOpenCvCameraView;
-    static{ System.loadLibrary("opencv_java3"); }
+//    static{ System.loadLibrary("opencv_java4"); }
 
     private CameraActivity thisActivity;
 
@@ -46,6 +44,14 @@ public abstract class CameraActivity extends FullscreenActivityParent implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Permissions for Android 6+
+        ActivityCompat.requestPermissions(
+                this,
+                new String[]{Manifest.permission.CAMERA},
+                1
+        );
+
     }
 
     private void initialiseCamera() {
@@ -57,7 +63,7 @@ public abstract class CameraActivity extends FullscreenActivityParent implements
 
         if (!OpenCVLoader.initDebug()) {
             Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, mLoaderCallback);
         } else {
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
@@ -91,6 +97,10 @@ public abstract class CameraActivity extends FullscreenActivityParent implements
                 case LoaderCallbackInterface.SUCCESS:
                 {
                     Log.i(TAG, "OpenCV loaded successfully");
+
+                    // Load native library after(!) OpenCV initialization
+                    System.loadLibrary("native-lib");
+
                     mOpenCvCameraView.enableView();
                 } break;
                 default:

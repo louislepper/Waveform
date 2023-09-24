@@ -12,4 +12,5 @@
     <string name="smooth_edges_off">Don\'t smooth edges</string>
     <string name="line_feedback_off">No line feedback</string>
     <string name="octave">Keyboard Octave</string>
+    <string name="pause_button">Pause</string>
 </resources>
