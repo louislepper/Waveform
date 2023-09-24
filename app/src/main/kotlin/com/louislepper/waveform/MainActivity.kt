@@ -38,6 +38,7 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
                     mOpenCvCameraView!!.enableView()
                 }
+
                 else -> {
                     super.onManagerConnected(status)
                 }
@@ -71,7 +72,7 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
         // TODO: Add this to camera activity
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
         // Permissions for Android 6+
         ActivityCompat.requestPermissions(
@@ -106,8 +107,8 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
         settingsView = findViewById<View>(R.id.settings_content)
         keyboardView = findViewById<View>(R.id.keyboard_view) as KeyboardView
         numberPicker = findViewById<View>(R.id.numberPicker) as NumberPicker
-        numberPicker?.setMaxValue(8)
-        numberPicker?.setMinValue(0)
+        numberPicker?.maxValue = 8
+        numberPicker?.minValue = 0
     }
 
     override fun onRequestPermissionsResult(
@@ -125,6 +126,7 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
                     Toast.makeText(this, message, Toast.LENGTH_LONG).show()
                 }
             }
+
             else -> {
                 Log.e(TAG, "Unexpected permission request")
             }
@@ -167,20 +169,12 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
     private fun updateSmoothingButton() {
         val smoothingButton = findViewById<View>(R.id.toggleSmoothingButton) as ToggleButton
-        if (smoothing) {
-            smoothingButton.isChecked = true
-        } else {
-            smoothingButton.isChecked = false
-        }
+        smoothingButton.isChecked = smoothing
     }
 
     private fun updateLineFeedbackButton() {
         val smoothingButton = findViewById<View>(R.id.toggleLineButton) as ToggleButton
-        if (lineFeedback) {
-            smoothingButton.isChecked = true
-        } else {
-            smoothingButton.isChecked = false
-        }
+        smoothingButton.isChecked = lineFeedback
     }
 
     fun toggleSmoothing(view: View?) {
@@ -192,6 +186,7 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
         lineFeedback = !lineFeedback
         editor!!.putBoolean(LINE_FEEDBACK, lineFeedback)
     }
+
     override fun onDestroy() {
         super.onDestroy()
         if (mOpenCvCameraView != null)
@@ -230,9 +225,9 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
         if (audioThread == null || (audioThread?.isAlive != true)) {
             audioThread = AudioThread()
-            keyboardView?.setMidiListener(audioThread);
+            keyboardView?.setMidiListener(audioThread)
             //This should maybe get its value from preferences. Not sure if number picker will have been set in time.
-            numberPicker?.value?.let { audioThread?.setOctave(it) };
+            numberPicker?.value?.let { audioThread?.setOctave(it) }
             if (currentScreen == KEYBOARD) {
                 audioThread?.keyboardOn()
             } else {
@@ -254,6 +249,7 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
         // return processed frame for live preview
         return currentMat
     }
+
     var soundData: ShortArray = shortArrayOf()
 
     fun displaySettings(view: View?) {
@@ -307,12 +303,12 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
                 audioThread?.join()
             } catch (e: InterruptedException) {
                 e.printStackTrace()
-                Log.d(FullscreenActivityParent.TAG, "Audio track potentially wasn't freed!")
+                Log.d(TAG, "Audio track potentially wasn't freed!")
             }
         }
     }
 
-    private fun soundArrayToImage(array: ShortArray, image: Mat): Mat? {
+    private fun soundArrayToImage(array: ShortArray, image: Mat): Mat {
         val red = doubleArrayOf(255.0, 0.0, 0.0, 0.0)
         val imageCols = image.cols()
         for (x in 0 until imageCols) {
@@ -334,7 +330,7 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
         //Find a white pixel in the first column of the image.
         //Once a white pixel is found, start searching the next column near to where the previous pixel was found.
         var previousWhitePoint = 0
-        for (x in 0 until mat.cols()) {
+        for (x in 0 until mat.cols) {
             val newPoint = smartFindWhitePointInColumn(mat, x, previousWhitePoint)
             soundData[x] = newPoint
             if (newPoint.toInt() != -1) {
@@ -343,8 +339,8 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
         }
 
         //This should never happen, but we found that occasionally the image matrix would change dimensions. Perhaps on rotate.
-        if (soundData.size > mat.cols()) {
-            for (i in mat.cols() until soundData.size) {
+        if (soundData.size > mat.cols) {
+            for (i in mat.cols until soundData.size) {
                 soundData[i] = -1
             }
         }
