@@ -1,10 +1,15 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-# Native OpenCV for Android with Android NDK
+# Waveform #
 
-A tutorial for setting up OpenCV 4.6.0 (and other 4.x.y versions) for Android in [Android Studio](https://developer.android.com/studio) with Native Development Kit (NDK) support.
-[Android NDK](https://developer.android.com/ndk) enables you to implement your [OpenCV](https://opencv.org) image processing pipeline in C++ and call that C++ code from Android Kotlin/Java code through JNI ([Java Native Interface](https://en.wikipedia.org/wiki/Java_Native_Interface)).
+This is an Android app that detects lines through your phone's camera, and then interprets those lines as sound waves. Those sound waves can be played directly, or they can be mapped to keyboard tones, and played on the onscreen keyboard.
 
-This sample Android application displays a live camera feed with an OpenCV *adaptive threshold* filter applied on each frame. The OpenCV *adaptive threshold* call is performed in C++.
+The best way to try out this app is to download it from the play store: [Waveform @ Google Play](https://play.google.com/store/apps/details?id=com.louislepper.waveform&hl=en)
+
+For getting the most interesting sounds I recommend putting your phone on a stand, facing it towards a whiteboard, and drawing soundwaves, like sinewaves, squarewaves, and shapes on the board. You'll need to make sure the board is clean, and doesn't have strong light reflections on it, otherwise patterns other than your hand drawn lines will be detected. (you'll be able to tell if this is happening from the onscreen feedback)
+
+That being said, you can also just point your phone at anything, and hear what it sounds like :-)
+
+
+For development on this project, you'll need to [setup and get familiar with openCV](http://opencv.org/platforms/android.html). If you have any questions just ask around here or send me a message.
 
 ## Setup
 
@@ -24,22 +29,16 @@ This sample Android application displays a live camera feed with an OpenCV *adap
 
 2. [Install NDK and CMake](https://developer.android.com/studio/projects/install-ndk.md)
 
-3. Clone this repository as an Android Studio project :
-     * In Android Studio, click on `File -> New -> Project from Version Control -> Git`
-     * Paste this repository *Github URL*, choose a *project directory* and click next.
-
-4. Install *OpenCV Android release* :
+3. Install *OpenCV Android release* :
     * Download [OpenCV 4.6.0 Android release](https://sourceforge.net/projects/opencvlibrary/files/4.6.0/opencv-4.6.0-android-sdk.zip/download) or download latest available Android release on [OpenCV website](https://opencv.org/releases/).
     * Unzip downloaded file and put **OpenCV-android-sdk** directory on a path of your choice.
 
-5. Link your *Android Studio* project to the *OpenCV Android SDK* you just downloaded :
+4. Link your *Android Studio* project to the *OpenCV Android SDK* you just downloaded :
     * Open [gradle.properties](gradle.properties) file and edit following line with your own *OpenCV Android SDK* directory path :
 
           opencvsdk=/Users/Example/Downloads/OpenCV-android-sdk
 
-6. Sync Gradle and run the application on your Android Device!
-
-Note: MainActivity is written in Kotlin but you can comment out the [Kotlin](/app/src/main/kotlin/com/example/waveform/MainActivity.kt) file and uncomment the [Java](/app/src/main/java/com/example/nativeopencvandroidtemplate/MainActivity.java) file to use Java.
+5. Sync Gradle and run the application on your Android Device!
 
 ## Bootstrap a new Android project with Native OpenCV support
 
@@ -119,20 +118,5 @@ Here are the steps to follow to create a new Android Studio project with native 
 12. Sync Gradle and run the application on your Android Device!
 
 
-
-
-
-![alt text](images/native-opencv-android-template-screenshot.jpg)
-
-
-## Questions and Remarks
-
-If you have any question or remark regarding this tutorial, feel free to open an issue.
-
-## Acknowledgments
-
-This tutorial was inspired by this very good [Github repository](https://github.com/leadrien/opencv_native_androidstudio).
-
-## Keywords
-
-Tutorial, Template, OpenCV 4, Android, Android Studio, Native, NDK, Native Development Kit, JNI, Java Native Interface, C++, Kotlin, Java
+This was partly created using this OpenCV template:
+https://github.com/VlSomers/native-opencv-android-template
