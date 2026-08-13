@@ -31,10 +31,6 @@ project(':opencv') {
                 sourceCompatibility rootProject.ext.javaVersion
                 targetCompatibility rootProject.ext.javaVersion
             }
-            // OpenCV's own sources reference org.opencv.BuildConfig.
-            buildFeatures {
-                buildConfig true
-            }
         }
     }
 }

@@ -42,8 +42,8 @@ object OpenCvTestSupport {
     @Synchronized
     fun loadNativeLibraries() {
         if (loaded) return
-        val openCvInitialised = OpenCVLoader.initDebug()
-        Log.i(TAG, "OpenCVLoader.initDebug() returned $openCvInitialised")
+        val openCvInitialised = OpenCVLoader.initLocal()
+        Log.i(TAG, "OpenCVLoader.initLocal() returned $openCvInitialised")
         check(openCvInitialised) { "OpenCV failed to initialise on this device" }
         System.loadLibrary("native-lib")
         loaded = true

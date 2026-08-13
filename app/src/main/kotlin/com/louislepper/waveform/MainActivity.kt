@@ -17,9 +17,7 @@ import android.widget.ToggleButton
 import androidx.core.app.ActivityCompat
 import com.levien.synthesizer.android.widgets.keyboard.KeyboardView
 import com.louislepper.waveform.ImageSoundManipulationUtils.soundArrayToImage
-import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase
-import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
@@ -27,25 +25,6 @@ import org.opencv.imgproc.Imgproc
 class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
     private var mOpenCvCameraView: CameraBridgeViewBase? = null
-
-    private val mLoaderCallback = object : BaseLoaderCallback(this) {
-        override fun onManagerConnected(status: Int) {
-            when (status) {
-                LoaderCallbackInterface.SUCCESS -> {
-                    Log.i(TAG, "OpenCV loaded successfully")
-
-                    // Load native library after(!) OpenCV initialization
-                    System.loadLibrary("native-lib")
-
-                    mOpenCvCameraView!!.enableView()
-                }
-
-                else -> {
-                    super.onManagerConnected(status)
-                }
-            }
-        }
-    }
 
     private var smoothing = true
     private var lineFeedback = true
@@ -142,13 +121,7 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
     override fun onResume() {
         super.onResume()
-        if (!OpenCVLoader.initDebug()) {
-            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization")
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, mLoaderCallback)
-        } else {
-            Log.d(TAG, "OpenCV library found inside package. Using it!")
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
-        }
+        startOpenCvAndCamera()
 
         smoothing = app_preferences!!.getBoolean(SMOOTHING, true)
         updateSmoothingButton()
@@ -161,6 +134,27 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
             KEYBOARD -> displayKeyboard(null)
             else -> displayMainView(null)
         }
+    }
+
+    /**
+     * OpenCV 4.x is bundled inside the application package, so it is initialised straight from
+     * there. The asynchronous OpenCV Manager path (BaseLoaderCallback/initAsync) was removed in
+     * OpenCV 4.14. The ordering still matters: the app's own native library links against OpenCV
+     * and must only be loaded once OpenCV itself is up.
+     */
+    private fun startOpenCvAndCamera() {
+        if (!OpenCVLoader.initLocal()) {
+            val message = "OpenCV failed to initialise"
+            Log.e(TAG, message)
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+            return
+        }
+        Log.i(TAG, "OpenCV loaded successfully")
+
+        // Load native library after(!) OpenCV initialization
+        System.loadLibrary("native-lib")
+
+        mOpenCvCameraView?.enableView()
     }
 
     private fun updateOctaveSelector() {
