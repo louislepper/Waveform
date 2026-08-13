@@ -15,13 +15,23 @@ For development on this project, you'll need to [setup and get familiar with ope
 
 | Tool      | Version |
 | ---       |  ---    |
-| [OpenCV](https://opencv.org) | 4.6.0
-| [Android Studio](https://developer.android.com/studio) | 2021.2.1
-| [Android Build Tool](https://developer.android.com/about) | 33.0
-| [Android NDK](https://developer.android.com/ndk/guides) | 25.0
-| [Kotlin](https://kotlinlang.org/docs/reference/) | 1.6.10
-| [Gradle](https://gradle.org) | 7.2.1
-| Mac OS | 12.4
+| [OpenCV](https://opencv.org) | 4.13.0
+| [Android Studio](https://developer.android.com/studio) | any recent
+| [Android Build Tool](https://developer.android.com/about) | 36.0.0
+| [Android NDK](https://developer.android.com/ndk/guides) | 28.2.13676358
+| [CMake](https://cmake.org) | 3.22.1
+| [Kotlin](https://kotlinlang.org/docs/reference/) | 2.4.0
+| [Gradle](https://gradle.org) | 8.14.3
+| [Android Gradle Plugin](https://developer.android.com/build) | 8.13.0
+| JDK | 17
+| Compile / target SDK | 36 (min 21)
+
+NDK r28 is what makes the app's native libraries 16 KB page aligned, which
+Android 15+ devices require. OpenCV 4.13.0 is used rather than 4.14.0 because
+4.14's arm64 build probes the SVE vector length whenever `HWCAP2_SVE2` is set
+without first checking `HWCAP_SVE`, and so crashes with `SIGILL` while loading
+on hosts that report the former without the latter - including the Android
+emulator on Apple Silicon. See the comment in [gradle.properties](gradle.properties).
 
 ## How to use this repository
 
@@ -30,15 +40,20 @@ For development on this project, you'll need to [setup and get familiar with ope
 2. [Install NDK and CMake](https://developer.android.com/studio/projects/install-ndk.md)
 
 3. Install *OpenCV Android release* :
-    * Download [OpenCV 4.6.0 Android release](https://sourceforge.net/projects/opencvlibrary/files/4.6.0/opencv-4.6.0-android-sdk.zip/download) or download latest available Android release on [OpenCV website](https://opencv.org/releases/).
-    * Unzip downloaded file and put **OpenCV-android-sdk** directory on a path of your choice.
+    * Download the [OpenCV 4.13.0 Android release](https://github.com/opencv/opencv/releases/download/4.13.0/opencv-4.13.0-android-sdk.zip). Newer releases are listed on the [OpenCV website](https://opencv.org/releases/), but see the note above before moving off 4.13.0.
+    * Unzip the downloaded file. It expands to an **OpenCV-android-sdk** directory; rename it to include the version, e.g. **OpenCV-4.13.0-android-sdk**, and put it on a path of your choice. Naming it by version lets several releases sit side by side, which makes switching between them a one line change.
 
 4. Link your *Android Studio* project to the *OpenCV Android SDK* you just downloaded :
     * Open [gradle.properties](gradle.properties) file and edit following line with your own *OpenCV Android SDK* directory path :
 
-          opencvsdk=/Users/Example/Downloads/OpenCV-android-sdk
+          opencvsdk=/Users/Example/Downloads/OpenCV-4.13.0-android-sdk
 
 5. Sync Gradle and run the application on your Android Device!
+
+The `:opencv` Gradle module is the `sdk` directory of that SDK, included from
+[settings.gradle](settings.gradle). It is not vendored into this repository, so the root
+[build.gradle](build.gradle) injects this project's compileSdk, NDK version and Java level into it
+instead of the SDK's own build file being edited in place.
 
 ## Bootstrap a new Android project with Native OpenCV support
 
@@ -55,8 +70,8 @@ Here are the steps to follow to create a new Android Studio project with native 
     * Choose `Toolchain default` as *C++ standard* and click Finish.
 
 4. Install *OpenCV Android release* :
-    * Download [OpenCV 4.6.0 Android release](https://sourceforge.net/projects/opencvlibrary/files/4.6.0/opencv-4.6.0-android-sdk.zip/download) or download latest available Android release on [OpenCV website](https://opencv.org/releases/).
-    * Unzip downloaded file and put **OpenCV-android-sdk** directory on a path of your choice.
+    * Download the [OpenCV 4.13.0 Android release](https://github.com/opencv/opencv/releases/download/4.13.0/opencv-4.13.0-android-sdk.zip) or the latest available Android release on the [OpenCV website](https://opencv.org/releases/).
+    * Unzip downloaded file and put the **OpenCV-android-sdk** directory on a path of your choice.
     
 5. Add *OpenCV Android SDK* as a module into your project :
     * Open [setting.gradle](settings.gradle) file and append these two lines.
@@ -66,7 +81,7 @@ Here are the steps to follow to create a new Android Studio project with native 
         
     * Open [gradle.properties](gradle.properties) file and append following line. Do not forget to use correct *OpenCV Android SDK* path for your machine. 
     
-          opencvsdk=/Users/Example/Downloads/OpenCV-android-sdk
+          opencvsdk=/Users/Example/Downloads/OpenCV-4.13.0-android-sdk
           
     * Open [build.gradle](app/build.gradle) file and add `implementation project(path: ':opencv')` to dependencies section :
     
