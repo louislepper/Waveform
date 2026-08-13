@@ -3,6 +3,18 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// Release signing is configured via an untracked keystore.properties in the repo root:
+//   storeFile=/absolute/path/to/keystore
+//   storePassword=...
+//   keyAlias=...
+//   keyPassword=...
+// When the file is absent the release build stays unsigned, so CI and fresh clones still build.
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
 android {
     namespace = 'com.louislepper.waveform'
     compileSdk = rootProject.ext.compileSdkVersion
@@ -23,10 +35,23 @@ android {
             }
         }
     }
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            release {
+                storeFile = file(keystoreProperties['storeFile'])
+                storePassword = keystoreProperties['storePassword']
+                keyAlias = keystoreProperties['keyAlias']
+                keyPassword = keystoreProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.release
+            }
         }
     }
     externalNativeBuild {
