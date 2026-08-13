@@ -4,16 +4,9 @@ import android.Manifest
 import android.content.Context
 import android.os.SystemClock
 import android.util.Log
-import android.view.InputDevice
-import android.view.MotionEvent
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.ViewAction
-import androidx.test.espresso.action.CoordinatesProvider
-import androidx.test.espresso.action.GeneralClickAction
-import androidx.test.espresso.action.Press
-import androidx.test.espresso.action.Tap
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
@@ -128,13 +121,13 @@ class MainActivitySmokeTest {
             onView(withId(R.id.toggleSmoothingButton)).check(matches(isChecked()))
             onView(withId(R.id.toggleLineButton)).check(matches(isChecked()))
 
-            onView(withId(R.id.toggleSmoothingButton)).perform(clickBelowTheStatusBar())
+            onView(withId(R.id.toggleSmoothingButton)).perform(click())
             onView(withId(R.id.toggleSmoothingButton)).check(matches(isNotChecked()))
 
-            onView(withId(R.id.toggleLineButton)).perform(clickBelowTheStatusBar())
+            onView(withId(R.id.toggleLineButton)).perform(click())
             onView(withId(R.id.toggleLineButton)).check(matches(isNotChecked()))
 
-            onView(withId(R.id.toggleSmoothingButton)).perform(clickBelowTheStatusBar())
+            onView(withId(R.id.toggleSmoothingButton)).perform(click())
             onView(withId(R.id.toggleSmoothingButton)).check(matches(isChecked()))
         }
     }
@@ -151,7 +144,7 @@ class MainActivitySmokeTest {
             awaitSettled(scenario)
 
             onView(withId(R.id.settings_button)).perform(click())
-            onView(withId(R.id.toggleSmoothingButton)).perform(clickBelowTheStatusBar())
+            onView(withId(R.id.toggleSmoothingButton)).perform(click())
             onView(withId(R.id.toggleSmoothingButton)).check(matches(isNotChecked()))
 
             val preferences = InstrumentationRegistry.getInstrumentation().targetContext
@@ -171,28 +164,6 @@ class MainActivitySmokeTest {
             onView(withId(R.id.toggleSmoothingButton)).check(matches(isChecked()))
         }
     }
-
-    /**
-     * The settings toggles are laid out with `alignParentTop`, and since the app is drawn
-     * edge to edge on API 35+ their top half sits underneath the status bar. A normal
-     * `ViewActions.click()` taps the view's centre, which on this emulator lands exactly on the
-     * status bar inset (button at y=0, height 126px, status bar inset 63px) and is swallowed by
-     * the system. Tapping the lower part of the button reaches the app.
-     */
-    private fun clickBelowTheStatusBar(): ViewAction = GeneralClickAction(
-        Tap.SINGLE,
-        CoordinatesProvider { view ->
-            val location = IntArray(2)
-            view.getLocationOnScreen(location)
-            floatArrayOf(
-                location[0] + view.width / 2f,
-                location[1] + view.height * LOWER_PORTION_OF_VIEW
-            )
-        },
-        Press.FINGER,
-        InputDevice.SOURCE_UNKNOWN,
-        MotionEvent.BUTTON_PRIMARY
-    )
 
     /**
      * [MainActivity] is not stable straight after launch: `onCreate` forces
@@ -225,7 +196,6 @@ class MainActivitySmokeTest {
         private const val SETTLE_TIMEOUT_MILLIS = 20000L
         private const val REQUIRED_STABLE_MILLIS = 1500L
         private const val POLL_MILLIS = 100L
-        private const val LOWER_PORTION_OF_VIEW = 0.8f
         private const val APP_PREFERENCES = "APP_PREFERENCES"
         private const val SMOOTHING_PREFERENCE = "smoothing"
         private const val SCREEN_PREFERENCE = "screen"

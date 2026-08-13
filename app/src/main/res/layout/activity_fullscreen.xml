@@ -83,10 +83,11 @@
             android:visibility="gone"
             android:id="@+id/keyboard_view" />
 
+        <!-- Padding for the system bars is applied to fullscreen_content_controls itself, from
+             MainActivity, so that the bar's background still runs to the bottom of the screen. -->
         <FrameLayout android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:fitsSystemWindows="true">
+            android:layout_weight="0">
 
             <LinearLayout android:id="@+id/fullscreen_content_controls" style="?metaButtonBarStyle"
                 android:layout_width="match_parent" android:layout_height="wrap_content"

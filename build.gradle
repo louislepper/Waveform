@@ -7,7 +7,7 @@ plugins {
 }
 
 ext {
-    compileSdkVersion = 35
+    compileSdkVersion = 36
     ndkVersion = '28.2.13676358'
     javaVersion = JavaVersion.VERSION_17
 }

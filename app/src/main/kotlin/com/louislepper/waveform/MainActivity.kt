@@ -15,6 +15,9 @@ import android.widget.NumberPicker
 import android.widget.Toast
 import android.widget.ToggleButton
 import androidx.core.app.ActivityCompat
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.levien.synthesizer.android.widgets.keyboard.KeyboardView
 import com.louislepper.waveform.ImageSoundManipulationUtils.soundArrayToImage
 import org.opencv.android.CameraBridgeViewBase
@@ -89,7 +92,47 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
         numberPicker = findViewById<View>(R.id.numberPicker) as NumberPicker
         numberPicker?.maxValue = 8
         numberPicker?.minValue = 0
+
+        keepControlsClearOfTheSystemBars()
     }
+
+    /**
+     * From targetSdk 36 an app is always drawn edge to edge and cannot opt out, so the window
+     * extends underneath the status and navigation bars. The camera preview is meant to fill the
+     * screen, but anything the user has to touch is not: without this the settings toggles sit
+     * half under the status bar, where the system swallows taps aimed at their centre.
+     */
+    private fun keepControlsClearOfTheSystemBars() {
+        val settings = settingsView ?: return
+        ViewCompat.setOnApplyWindowInsetsListener(settings) { view, windowInsets ->
+            val obstructions = windowInsets.obstructions()
+            view.setPadding(
+                obstructions.left,
+                obstructions.top,
+                obstructions.right,
+                obstructions.bottom
+            )
+            windowInsets
+        }
+
+        val controls = findViewById<View>(R.id.fullscreen_content_controls)
+        ViewCompat.setOnApplyWindowInsetsListener(controls) { view, windowInsets ->
+            val obstructions = windowInsets.obstructions()
+            // The bar is already pinned to the bottom of the window, so only the edges it
+            // actually touches need insetting; padding it away from the status bar would just
+            // make it needlessly tall.
+            view.setPadding(
+                obstructions.left,
+                view.paddingTop,
+                obstructions.right,
+                obstructions.bottom
+            )
+            windowInsets
+        }
+    }
+
+    private fun WindowInsetsCompat.obstructions(): Insets =
+        getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
