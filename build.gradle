@@ -25,11 +25,11 @@ allprojects {
 project(':opencv') {
     afterEvaluate {
         android {
-            compileSdk rootProject.ext.compileSdkVersion
-            ndkVersion rootProject.ext.ndkVersion
+            compileSdk = rootProject.ext.compileSdkVersion
+            ndkVersion = rootProject.ext.ndkVersion
             compileOptions {
-                sourceCompatibility rootProject.ext.javaVersion
-                targetCompatibility rootProject.ext.javaVersion
+                sourceCompatibility = rootProject.ext.javaVersion
+                targetCompatibility = rootProject.ext.javaVersion
             }
         }
     }

@@ -4,17 +4,17 @@ plugins {
 }
 
 android {
-    namespace 'com.louislepper.waveform'
-    compileSdk rootProject.ext.compileSdkVersion
-    ndkVersion rootProject.ext.ndkVersion
+    namespace = 'com.louislepper.waveform'
+    compileSdk = rootProject.ext.compileSdkVersion
+    ndkVersion = rootProject.ext.ndkVersion
 
     defaultConfig {
-        applicationId "com.louislepper.waveform"
-        minSdk 21
-        targetSdk 36
-        versionCode 9
-        versionName '9.0'
-        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        applicationId = "com.louislepper.waveform"
+        minSdk = 21
+        targetSdk = 36
+        versionCode = 9
+        versionName = '9.0'
+        testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
         externalNativeBuild {
             cmake {
                 cppFlags "-frtti -fexceptions"
@@ -25,19 +25,19 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     externalNativeBuild {
         cmake {
-            path "src/main/cpp/CMakeLists.txt"
-            version "3.22.1"
+            path = "src/main/cpp/CMakeLists.txt"
+            version = "3.22.1"
         }
     }
     compileOptions {
-        sourceCompatibility rootProject.ext.javaVersion
-        targetCompatibility rootProject.ext.javaVersion
+        sourceCompatibility = rootProject.ext.javaVersion
+        targetCompatibility = rootProject.ext.javaVersion
     }
 }
 
