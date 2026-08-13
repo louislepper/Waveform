@@ -10,7 +10,7 @@ using namespace cv;
 
 extern "C" {
 void JNICALL
-Java_com_louislepper_waveform_MainActivity_adaptiveThresholdFromJNI(
+Java_com_louislepper_waveform_WaveformProcessor_adaptiveThresholdFromJNI(
         JNIEnv *env,
         jobject instance,
         jlong matAddr

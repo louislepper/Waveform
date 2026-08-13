@@ -16,7 +16,6 @@ import android.widget.Toast
 import android.widget.ToggleButton
 import androidx.core.app.ActivityCompat
 import com.levien.synthesizer.android.widgets.keyboard.KeyboardView
-import com.louislepper.waveform.ImageSoundManipulationUtils.imageArrayToSoundArray
 import com.louislepper.waveform.ImageSoundManipulationUtils.soundArrayToImage
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase
@@ -210,20 +209,9 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
         // get current camera inputFrame as OpenCV Mat object
         val currentMat = inputFrame.gray()
 
-        // native call to process current camera frame
-        adaptiveThresholdFromJNI(currentMat.nativeObjAddr)
-
-        if (soundData.size != currentMat.cols()) {
-            soundData = ShortArray(currentMat.cols())
-        }
-
-        imageArrayToSoundArray(ArrayMat(currentMat), soundData)
-
-        val startAndEnd = SampleInterpolator.interpolateInvalidSamples(soundData)
-
-        if (smoothing) {
-            soundData = SampleCrossfader.crossfade(soundData, startAndEnd.start, startAndEnd.length)
-        }
+        val processedFrame = WaveformProcessor.processFrame(currentMat, soundData, smoothing)
+        soundData = processedFrame.soundData
+        val startAndEnd = processedFrame.startAndEnd
 
         if (audioThread == null || (audioThread?.isAlive != true)) {
             audioThread = AudioThread()
@@ -309,8 +297,6 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
             }
         }
     }
-
-    private external fun adaptiveThresholdFromJNI(matAddr: Long)
 
     companion object {
         private var audioThread: AudioThread? = null
