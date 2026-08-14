@@ -15,12 +15,12 @@ import android.widget.NumberPicker
 import android.widget.Toast
 import android.widget.ToggleButton
 import androidx.core.app.ActivityCompat
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.levien.synthesizer.android.widgets.keyboard.KeyboardView
-import com.louislepper.waveform.ImageSoundManipulationUtils.imageArrayToSoundArray
 import com.louislepper.waveform.ImageSoundManipulationUtils.soundArrayToImage
-import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase
-import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
@@ -28,25 +28,6 @@ import org.opencv.imgproc.Imgproc
 class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
     private var mOpenCvCameraView: CameraBridgeViewBase? = null
-
-    private val mLoaderCallback = object : BaseLoaderCallback(this) {
-        override fun onManagerConnected(status: Int) {
-            when (status) {
-                LoaderCallbackInterface.SUCCESS -> {
-                    Log.i(TAG, "OpenCV loaded successfully")
-
-                    // Load native library after(!) OpenCV initialization
-                    System.loadLibrary("native-lib")
-
-                    mOpenCvCameraView!!.enableView()
-                }
-
-                else -> {
-                    super.onManagerConnected(status)
-                }
-            }
-        }
-    }
 
     private var smoothing = true
     private var lineFeedback = true
@@ -111,7 +92,47 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
         numberPicker = findViewById<View>(R.id.numberPicker) as NumberPicker
         numberPicker?.maxValue = 8
         numberPicker?.minValue = 0
+
+        keepControlsClearOfTheSystemBars()
     }
+
+    /**
+     * From targetSdk 36 an app is always drawn edge to edge and cannot opt out, so the window
+     * extends underneath the status and navigation bars. The camera preview is meant to fill the
+     * screen, but anything the user has to touch is not: without this the settings toggles sit
+     * half under the status bar, where the system swallows taps aimed at their centre.
+     */
+    private fun keepControlsClearOfTheSystemBars() {
+        val settings = settingsView ?: return
+        ViewCompat.setOnApplyWindowInsetsListener(settings) { view, windowInsets ->
+            val obstructions = windowInsets.obstructions()
+            view.setPadding(
+                obstructions.left,
+                obstructions.top,
+                obstructions.right,
+                obstructions.bottom
+            )
+            windowInsets
+        }
+
+        val controls = findViewById<View>(R.id.fullscreen_content_controls)
+        ViewCompat.setOnApplyWindowInsetsListener(controls) { view, windowInsets ->
+            val obstructions = windowInsets.obstructions()
+            // The bar is already pinned to the bottom of the window, so only the edges it
+            // actually touches need insetting; padding it away from the status bar would just
+            // make it needlessly tall.
+            view.setPadding(
+                obstructions.left,
+                view.paddingTop,
+                obstructions.right,
+                obstructions.bottom
+            )
+            windowInsets
+        }
+    }
+
+    private fun WindowInsetsCompat.obstructions(): Insets =
+        getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -143,13 +164,7 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
     override fun onResume() {
         super.onResume()
-        if (!OpenCVLoader.initDebug()) {
-            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization")
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, mLoaderCallback)
-        } else {
-            Log.d(TAG, "OpenCV library found inside package. Using it!")
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
-        }
+        startOpenCvAndCamera()
 
         smoothing = app_preferences!!.getBoolean(SMOOTHING, true)
         updateSmoothingButton()
@@ -162,6 +177,27 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
             KEYBOARD -> displayKeyboard(null)
             else -> displayMainView(null)
         }
+    }
+
+    /**
+     * OpenCV 4.x is bundled inside the application package, so it is initialised straight from
+     * there. The asynchronous OpenCV Manager path (BaseLoaderCallback/initAsync) was removed in
+     * OpenCV 4.14. The ordering still matters: the app's own native library links against OpenCV
+     * and must only be loaded once OpenCV itself is up.
+     */
+    private fun startOpenCvAndCamera() {
+        if (!OpenCVLoader.initLocal()) {
+            val message = "OpenCV failed to initialise"
+            Log.e(TAG, message)
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+            return
+        }
+        Log.i(TAG, "OpenCV loaded successfully")
+
+        // Load native library after(!) OpenCV initialization
+        System.loadLibrary("native-lib")
+
+        mOpenCvCameraView?.enableView()
     }
 
     private fun updateOctaveSelector() {
@@ -210,20 +246,9 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
         // get current camera inputFrame as OpenCV Mat object
         val currentMat = inputFrame.gray()
 
-        // native call to process current camera frame
-        adaptiveThresholdFromJNI(currentMat.nativeObjAddr)
-
-        if (soundData.size != currentMat.cols()) {
-            soundData = ShortArray(currentMat.cols())
-        }
-
-        imageArrayToSoundArray(ArrayMat(currentMat), soundData)
-
-        val startAndEnd = SampleInterpolator.interpolateInvalidSamples(soundData)
-
-        if (smoothing) {
-            soundData = SampleCrossfader.crossfade(soundData, startAndEnd.start, startAndEnd.length)
-        }
+        val processedFrame = WaveformProcessor.processFrame(currentMat, soundData, smoothing)
+        soundData = processedFrame.soundData
+        val startAndEnd = processedFrame.startAndEnd
 
         if (audioThread == null || (audioThread?.isAlive != true)) {
             audioThread = AudioThread()
@@ -309,8 +334,6 @@ class MainActivity : Activity(), CameraBridgeViewBase.CvCameraViewListener2 {
             }
         }
     }
-
-    private external fun adaptiveThresholdFromJNI(matAddr: Long)
 
     companion object {
         private var audioThread: AudioThread? = null
